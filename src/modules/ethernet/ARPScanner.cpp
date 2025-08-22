@@ -146,11 +146,13 @@ void ARPScanner::setup() {
 
         hostsScanned++;
         if (millis() - lastUpdate > 500) { // Update display every 500ms
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             displayRedStripe(
                 "Probing " + String(hostsScanned) + " of " + String(totalHosts) + " hosts",
                 getComplementaryColor2(bruceConfig.priColor),
                 bruceConfig.priColor
             );
+            #endif
             lastUpdate = millis();
         }
 
@@ -198,12 +200,15 @@ void ARPScanner::setup() {
     }
 
 ScanHostMenu:
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     if (hostslist_eth.empty()) {
         tft.println("No hosts found");
         delay(2000);
         return;
     }
+    #endif
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     options = {};
     for (auto host : hostslist_eth) {
         String result = host.ip.toString();
@@ -214,6 +219,7 @@ ScanHostMenu:
 
     loopOptions(options);
     options.clear();
+    #endif
 
     if (!returnToMenu) goto ScanHostMenu;
     hostslist_eth.clear();
@@ -262,7 +268,9 @@ void ARPScanner::afterScanOptions(const Host &host) {
         {"Station Deauth",
          [=]() {
              if (!wifiConnected) {
-                 displayError("Station deauth not available on ethernet");
+                #if (defined(HAS_TFT) || defined(HAS_SCREEN))
+                displayError("Station deauth not available on ethernet");
+                #endif
              } else {
                  stationDeauth(host);
              }
@@ -286,7 +294,9 @@ void ARPScanner::afterScanOptions(const Host &host) {
         {"ARP Poisoning", [=]() { ARPoisoner{gateway}; }},
     };
     // if(sdcardMounted && bruceConfig.devMode) options.push_back({"ARP MITM (WIP)",  [&](){ opt=5;  }});
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     loopOptions(options);
+    #endif
     if (opt == 5) {
         Serial.println("Starting MITM");
         // arpSpoofing(host, true);

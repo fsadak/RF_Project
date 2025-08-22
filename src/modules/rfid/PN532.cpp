@@ -1,3 +1,4 @@
+#if defined(HAS_PN532)
 /**
  * @file PN532.cpp
  * @author Rennan Cockles (https://github.com/rennancockles)
@@ -579,8 +580,8 @@ int PN532::write_felica_data_block(int block, String data) {
         block_data[0][i / 2] = strtoul(data.substring(i, i + 2).c_str(), NULL, 16);
     }
 
-    uint16_t block_list[1] = {(uint16_t)(block + 0x8000
-    )}; // Write the block i. Block in FeliCa start from 0x8000
+    uint16_t block_list[1] = {(uint16_t)(block +
+                                         0x8000)}; // Write the block i. Block in FeliCa start from 0x8000
 
     uint16_t default_service_code[1] = {
         0x0009
@@ -654,3 +655,4 @@ int PN532::write_ndef_blocks() {
 
     return SUCCESS;
 }
+#endif

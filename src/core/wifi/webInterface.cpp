@@ -28,7 +28,9 @@ String uploadFolder = "";
 **  Turn off the WebUI
 **********************************************************************/
 void stopWebUi() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setLogging(false);
+    #endif
     isWebUIActive = false;
     server->end();
     server->~AsyncWebServer();
@@ -41,6 +43,7 @@ void stopWebUi() {
 **  Display options to launch the WebUI
 **********************************************************************/
 void loopOptionsWebUi() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (isWebUIActive) {
         bool opt = WiFi.getMode() - 1;
         options = {
@@ -51,6 +54,8 @@ void loopOptionsWebUi() {
         loopOptions(options);
         return;
     }
+    #endif
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     options = {
         {"my Network", lambdaHelper(startWebUi, false)},
         {"AP mode",    lambdaHelper(startWebUi, true) },
@@ -58,6 +63,7 @@ void loopOptionsWebUi() {
 
     loopOptions(options);
     // On fail installing will run the following line
+    #endif
 }
 
 /**********************************************************************
@@ -222,6 +228,7 @@ void notFound(AsyncWebServerRequest *request) { request->send(404, "text/plain",
 **  Draw information on screen of WebUI.
 **********************************************************************/
 void drawWebUiScreen(bool mode_ap) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     tft.fillScreen(bruceConfig.bgColor);
     tft.drawRoundRect(5, 5, tftWidth - 10, tftHeight - 10, 5, ALCOLOR);
@@ -255,6 +262,7 @@ void drawWebUiScreen(bool mode_ap) {
 #endif
 
     tft.drawCentreString("press Esc to stop", tftWidth / 2, tftHeight - 15, 1);
+    #endif
 }
 
 /**********************************************************************
@@ -395,11 +403,15 @@ void configureWebServer() {
     });
 
     server->on("/getscreen", HTTP_GET, [](AsyncWebServerRequest *request) {
+        #if (defined(HAS_BRUCE_TFT) || defined(HAS_SCREEN))
         uint8_t binData[MAX_LOG_ENTRIES * MAX_LOG_SIZE];
         size_t binSize = 0;
 
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         tft.getBinLog(binData, binSize);
+        #endif
         request->send(200, "application/octet-stream", (const uint8_t *)binData, binSize);
+        #endif
     });
 
     // WIP: Serve a folder to a custom WEBUI..
@@ -628,6 +640,48 @@ void configureWebServer() {
             request->requestAuthentication();
         }
     });
+
+ // Ağları tarayıp JSON olarak gönderir
+server->on("/wifi-scan", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (!checkUserWebAuth(request)) {
+        request->requestAuthentication();
+        return;
+    }
+
+    int n = WiFi.scanNetworks();
+    String json = "[";
+    for (int i = 0; i < n; ++i) {
+        json += "{";
+        json += "\"ssid\":\"" + WiFi.SSID(i) + "\",";
+        json += "\"rssi\":" + String(WiFi.RSSI(i)) + ",";
+        json += "\"secure\":" + String(WiFi.encryptionType(i));
+        json += "}";
+        if (i != n - 1) json += ",";
+    }
+    json += "]";
+    request->send(200, "application/json", json);
+});
+
+// Wi-Fi ağına bağlan
+server->on("/wifi-connect", HTTP_POST, [](AsyncWebServerRequest *request) {
+    if (!checkUserWebAuth(request)) {
+        request->requestAuthentication();
+        return;
+    }
+
+    if (request->hasArg("ssid") && request->hasArg("password")) {
+        String ssid = request->arg("ssid");
+        String password = request->arg("password");
+
+        WiFi.softAPdisconnect(true);  // AP modu kapat
+        WiFi.begin(ssid.c_str(), password.c_str());
+
+        request->send(200, "text/plain", "Connecting to " + ssid);
+    } else {
+        request->send(400, "text/plain", "Missing ssid or password");
+    }
+});
+
     server->begin();
 }
 
@@ -661,8 +715,11 @@ void startWebUi(bool mode_ap) {
 
         isWebUIActive = true;
     }
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setLogging();
     drawWebUiScreen(mode_ap);
+    #endif
+
 #ifdef HAS_SCREEN // Headless always run in the background!
     while (!check(EscPress)) {
         // nothing here, just to hold the screen until the server is on.

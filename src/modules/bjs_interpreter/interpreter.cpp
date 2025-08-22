@@ -1,10 +1,13 @@
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "interpreter.h"
 #include "core/mykeyboard.h"
 #include "core/sd_functions.h"
 #include "core/serialcmds.h"
 #include "modules/badusb_ble/ducky_typer.h"
 #include "modules/ir/ir_read.h"
+#ifdef HAS_RF
 #include "modules/rf/rf_scan.h"
+#endif
 
 #include <duktape.h>
 
@@ -619,6 +622,7 @@ static duk_ret_t native_irRead(duk_context *ctx) {
 // Subghz functions
 
 static duk_ret_t native_subghzRead(duk_context *ctx) {
+#ifdef HAS_RF
     // usage: subghzRead();
     // usage: subghzRead(timeout_in_seconds : number);
     // returns a string of the generated sub file, empty string on timeout or
@@ -627,23 +631,31 @@ static duk_ret_t native_subghzRead(duk_context *ctx) {
     if (duk_is_number(ctx, 0)) r = RCSwitch_Read(bruceConfig.rfFreq, duk_to_int(ctx, 0)); // custom timeout
     else r = RCSwitch_Read(bruceConfig.rfFreq, 10);
     duk_push_string(ctx, r.c_str());
+#else
     return 1;
+#endif
 }
 
 static duk_ret_t native_subghzReadRaw(duk_context *ctx) {
+#ifdef HAS_RF
     String r = "";
     if (duk_is_number(ctx, 0))
         r = RCSwitch_Read(bruceConfig.rfFreq, duk_to_int(ctx, 0),
                           true); // custom timeout
     else r = RCSwitch_Read(bruceConfig.rfFreq, 10, true);
     duk_push_string(ctx, r.c_str());
+#else
     return 1;
+#endif
 }
 
 static duk_ret_t native_subghzSetFrequency(duk_context *ctx) {
+#ifdef HAS_RF
     // usage: subghzSetFrequency(freq_as_float);
     if (duk_is_number(ctx, 0)) bruceConfig.rfFreq = duk_to_number(ctx, 0); // float global var
+#else
     return 0;
+#endif
 }
 
 static duk_ret_t native_keyboard(duk_context *ctx) {
@@ -1486,3 +1498,4 @@ bool run_bjs_script_headless(FS fs, String filename) {
     interpreter_start = true;
     return true;
 }
+#endif

@@ -62,7 +62,7 @@ String generateUniqueFilename(FS &fs) {
     String basePath = "/ProbeData/";
     String baseName = FILENAME;
     String extension = ".txt";
-    
+
     if (!fs.exists(basePath)) {
         fs.mkdir(basePath);
     }
@@ -144,9 +144,9 @@ std::vector<ProbeRequest> getUniqueProbes() {
             unique.push_back(probe);
         }
     }
-    
+
     std::reverse(unique.begin(), unique.end());
-    
+
     return unique;
 }
 
@@ -170,18 +170,18 @@ void probe_sniffer(void *buf, wifi_promiscuous_pkt_type_t type) {
         String key = mac + ssid;
         if (uniqueProbes.find(key) == uniqueProbes.end()) {
             uniqueProbes.insert(key);
-            
+
             ProbeRequest probe;
             probe.mac = mac;
             probe.ssid = ssid;
             probe.rssi = ctrl.rssi;
             probe.timestamp = millis();
             probe.channel = channl;  // <-- Current channel
-            
+
             probeRequests.push_back(probe);
             pkt_counter++;
             // Print to serial for debugging
-            Serial.printf("[PROBE] MAC: %s, SSID: %s, RSSI: %d\n", 
+            Serial.printf("[PROBE] MAC: %s, SSID: %s, RSSI: %d\n",
                          mac.c_str(), ssid.c_str(), ctrl.rssi);
         }
     }
@@ -207,7 +207,11 @@ void karma_setup() {
     FS *Fs;
     int redraw = true;
     String FileSys = "LittleFS";
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("PROBE SNIFFER");
+    #else
+    Serial.println("PROBE SNIFFER");
+    #endif
 
     if (setupSdCard()) {
         Fs = &SD;
@@ -222,9 +226,13 @@ void karma_setup() {
     // Create directories if they don't exist
     if (!Fs->exists("/ProbeData")) Fs->mkdir("/ProbeData");
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayTextLine("Sniffing Started");
     tft.setTextSize(FP);
     tft.setCursor(80, 100);
+    #else
+    Serial.println("Sniffing Started");
+    #endif
 
     // Clear previous data
     clearProbes();
@@ -256,7 +264,9 @@ void karma_setup() {
         if (returnToMenu) { // if it happened, LittleFS is full or user exited
             if (!checkLittleFsSize()) {
                 Serial.println("Not enough space on LittleFS");
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 displayError("LittleFS Full", true);
+                #endif
             }
             break;
         }
@@ -266,15 +276,15 @@ void karma_setup() {
         if (auto_hopping && (currentTime - last_ChannelChange >= hop_interval)) {
             esp_wifi_set_promiscuous(false);
             esp_wifi_set_promiscuous_rx_cb(nullptr);
-            
+
             channl++;
             if (channl > MAX_CHANNEL) channl = 1;
-            
+
             wifi_second_chan_t secondCh = (wifi_second_chan_t)NULL;
             esp_wifi_set_channel(channl, secondCh);
             last_ChannelChange = currentTime;
             redraw = true;
-            
+
             esp_wifi_set_promiscuous(true);
             esp_wifi_set_promiscuous_rx_cb(probe_sniffer);
         }
@@ -298,6 +308,7 @@ void karma_setup() {
             LongPress = true;
             long _tmp = millis();
             while (PrevPress) {
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 if (millis() - _tmp > 150)
                     tft.drawArc(
                         tftWidth / 2,
@@ -309,6 +320,7 @@ void karma_setup() {
                         getColorVariation(bruceConfig.priColor),
                         bruceConfig.bgColor
                     );
+                    #endif
                 vTaskDelay(10 / portTICK_RATE_MS);
             }
             LongPress = false;
@@ -330,7 +342,7 @@ void karma_setup() {
             esp_wifi_set_promiscuous_rx_cb(probe_sniffer);
         }
 
-        
+
 
 
 #if defined(HAS_KEYBOARD) || defined(T_EMBED)
@@ -342,6 +354,7 @@ void karma_setup() {
 
         if (check(SelPress) || redraw) {
             vTaskDelay(200 / portTICK_PERIOD_MS);
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             if (!redraw) {
                 options = {
                     {"Karma atk",
@@ -388,8 +401,8 @@ void karma_setup() {
                          displayTextLine("Probes cleared!");
                      }},
                      {
-                         auto_hopping ? "* Auto Hop" : "- Auto Hop",[=]() { 
-                         auto_hopping = !auto_hopping; 
+                         auto_hopping ? "* Auto Hop" : "- Auto Hop",[=]() {
+                         auto_hopping = !auto_hopping;
                          displayTextLine(auto_hopping ? "Auto Hop: ON" : "Auto Hop: OFF");
                      }},
                      {
@@ -402,9 +415,11 @@ void karma_setup() {
                 };
                 loopOptions(options);
             }
-        
+            #endif
+
             if (returnToMenu) goto Exit;
             redraw = false;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.drawPixel(0, 0, 0);
             drawMainBorderWithTitle("PROBE SNIFFER");
             tft.setTextSize(FP);
@@ -415,25 +430,45 @@ void karma_setup() {
             tft.drawRightString(
                 "Ch." + String(channl < 10 ? "0" : "") + String(channl) + "(Next)", tftWidth - 10, tftHeight - 18, 1
             );
+            #else
+            Serial.println("Saved to " + FileSys);
+            Serial.println("Sniffing ssids from probes...");
+            Serial.println("Ch." + String(channl < 10 ? "0" : "") + String(channl) + "(Next)");
+            #endif
         }
 
         delay(5);
 
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         if (currentTime - last_time > 100) tft.drawPixel(0, 0, 0);
+        #endif
 
         if (currentTime - last_time > 1000) {
             last_time = currentTime;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.drawString("Unique: " + String(uniqueProbes.size()), 10, tftHeight - 18);
             tft.drawCentreString("Packets " + String(pkt_counter), tftWidth / 2, tftHeight - 26, 1);
+            #else
+            Serial.println("Unique: " + String(uniqueProbes.size()));
+            Serial.println("Packets " + String(pkt_counter));
+            #endif
             String hopStatus = String(auto_hopping ? "A:" : "M:") + String(hop_interval) + "ms";
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.drawRightString(hopStatus, tftWidth - 10, tftHeight - 34);
+            #else
+            Serial.println(hopStatus);
+            #endif
             if (!probeRequests.empty()) {
                 ProbeRequest latest = probeRequests.back();
                 String displayText = latest.ssid + " -> " + latest.mac;
                 if (displayText.length() > 55) {
                     displayText = displayText.substring(0, 52) + "...";
                 }
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 padprint(displayText);
+                #else
+                Serial.println(displayText);
+                #endif
             }
         }
 
@@ -450,17 +485,17 @@ Exit:
 
 void saveProbesToFile(FS &fs) {
     if (!fs.exists("/ProbeData")) fs.mkdir("/ProbeData");
-    
+
     File file = fs.open(filen, FILE_WRITE);
     if (file) {
         file.println("Timestamp,MAC,RSSI,SSID");
         for (const auto &probe : probeRequests) {
             // Double check we only save probes with SSID (shouldn't be needed but just in case)
             if (probe.ssid.length() > 0) {
-                file.printf("%lu,%s,%d,\"%s\"\n", 
-                           probe.timestamp, 
-                           probe.mac.c_str(), 
-                           probe.rssi, 
+                file.printf("%lu,%s,%d,\"%s\"\n",
+                           probe.timestamp,
+                           probe.mac.c_str(),
+                           probe.rssi,
                            probe.ssid.c_str());
             }
         }

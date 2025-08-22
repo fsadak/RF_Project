@@ -68,6 +68,7 @@ void ARPSpoofer::setup(const Host &host, IPAddress gateway) {
     // TODO: Use toBytes helper
     for (int i = 0; i < 4; i++) gatewayIP[i] = gateway[i];
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("ARP Spoofing");
     padprintln("");
     padprintln("Single Target Attack.");
@@ -85,6 +86,7 @@ void ARPSpoofer::setup(const Host &host, IPAddress gateway) {
     padprintln("Press Any key to STOP.");
 
     loop();
+    #endif
 }
 
 void ARPSpoofer::loop() {
@@ -99,7 +101,9 @@ void ARPSpoofer::loop() {
             sendARPPacket(gatewayIP, gatewayMAC, victimIP, myMAC, pcapFile);
             tmp = millis();
             count++;
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             tft.drawRightString("Spoofed " + String(count) + " times", tftWidth - 12, tftHeight - 16, 1);
+            #endif
         }
     }
 

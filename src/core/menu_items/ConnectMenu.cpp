@@ -1,4 +1,5 @@
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "ConnectMenu.h"
 #include "core/connect/file_sharing.h"
 #include "core/connect/serial_commands.h"
@@ -61,3 +62,4 @@ void ConnectMenu::drawIcon(float scale) {
         bruceConfig.priColor
     );
 }
+#endif

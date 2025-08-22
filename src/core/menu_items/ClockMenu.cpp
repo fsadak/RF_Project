@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "ClockMenu.h"
 #include "core/display.h"
 #include "core/settings.h"
@@ -37,3 +38,4 @@ void ClockMenu::drawIcon(float scale) {
         iconCenterX, iconCenterY, iconCenterX + pointerSize, iconCenterY - pointerSize, bruceConfig.priColor
     );
 }
+#endif

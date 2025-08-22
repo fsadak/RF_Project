@@ -1,3 +1,4 @@
+#if defined(HAS_CLICKER) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "clicker.h"
 #include "core/display.h"
 #include "globals.h"
@@ -79,3 +80,4 @@ void bleClickerSetup(){
   }
 }
 */
+#endif

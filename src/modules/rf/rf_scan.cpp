@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_scan.h"
 #include "core/led_control.h"
 #include "core/sd_functions.h"
@@ -724,3 +725,4 @@ Exit:
 
     return "";
 }
+#endif

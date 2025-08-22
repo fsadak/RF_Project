@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "ConfigMenu.h"
 #include "core/display.h"
 #include "core/i2c_finder.h"
@@ -5,7 +6,7 @@
 #include "core/settings.h"
 #include "core/utils.h"
 #include "core/wifi/wifi_common.h"
-#ifdef HAS_RGB_LED
+#ifdef HAS_RGB
 #include "core/led_control.h"
 #endif
 
@@ -21,7 +22,7 @@ void ConfigMenu::optionsMenu() {
              bruceConfig.instantBoot = !bruceConfig.instantBoot;
              bruceConfig.saveFile();
          }},
-#ifdef HAS_RGB_LED
+#ifdef HAS_RGB
         {"LED Color",
          [=]() {
              beginLed();
@@ -115,3 +116,4 @@ void ConfigMenu::drawIcon(float scale) {
         false
     );
 }
+#endif

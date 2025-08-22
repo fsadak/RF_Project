@@ -231,7 +231,7 @@ bool writeHeader(File file) {
 // Sniffer callback
 void sniffer(void *buf, wifi_promiscuous_pkt_type_t type) {
     // If using LittleFS to save .pcaps and there's no room for data, don't do anything whith new packets
-  
+
     if (isLittleFS && !checkLittleFsSizeNM()) {
         returnToMenu = true;
         esp_wifi_set_promiscuous(false);
@@ -246,7 +246,7 @@ void sniffer(void *buf, wifi_promiscuous_pkt_type_t type) {
     const uint8_t frameSubType = (frameControl & 0xF0) >> 4;
 
     packet_counter++;
-    
+
     if (isItEAPOL(pkt)) {
         // if(_only_HS) newPacketSD(timestamp, microseconds, len, pkt->payload, _pcap_file);
         num_EAPOL++;
@@ -265,7 +265,7 @@ void sniffer(void *buf, wifi_promiscuous_pkt_type_t type) {
     if (frameType == 0x00 && frameSubType == 0x08) {
         const uint8_t *senderAddr = frame + 10; // Beacon source address
 	beacon_frames++;
-        
+
         pkt->rx_ctrl.sig_len -= 4; // cut off last 4 b
         // save the packet
         if(isLittleFS) saveHandshake(pkt, true, LittleFS);
@@ -281,17 +281,17 @@ void sniffer(void *buf, wifi_promiscuous_pkt_type_t type) {
         }
         registeredBeacons.insert(ThisBeacon); // add to the list
     }
-    
+
     // If we just want handshakes, quit now
     if(_only_HS) return;
-    
+
     if (fileOpen) {
         uint32_t timestamp = now();                                         // current timestamp
         uint32_t microseconds = (unsigned int)(micros() - millis() * 1000); // microseconds offset (0 - 999)
 
         uint32_t len = ctrl.sig_len;
         if (type == WIFI_PKT_MGMT) {
-            len -= 4; // Remove last 4 bytes (for checksum) or packet gets malformed 
+            len -= 4; // Remove last 4 bytes (for checksum) or packet gets malformed
                       // https://github.com/espressif/esp-idf/issues/886
         }
         newPacketSD(
@@ -348,7 +348,9 @@ void sniffer_setup() {
     String FileSys = "LittleFS";
     bool deauth = false;
     start_time = millis();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("pcap sniffer");
+    #endif
     lastRedraw = millis();
     // closeSdCard();
 
@@ -359,9 +361,11 @@ void sniffer_setup() {
     } else Fs = &LittleFS; // if not, use the internal memory.
 
     openFile(*Fs);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayTextLine("Sniffing Started");
     tft.setTextSize(FP);
     tft.setCursor(80, 100);
+    #endif
 
     SavedHS.clear(); // Need to clear to restart HS count
     registeredBeacons.clear();
@@ -406,7 +410,9 @@ void sniffer_setup() {
     for (;;) {
         if (returnToMenu) { // if it happpend, liffle FS is full;
             Serial.println("Not enough space on LittleFS");
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayError("LittleFS Full", true);
+            #endif
             break;
         }
         unsigned long currentTime = millis();
@@ -429,6 +435,7 @@ void sniffer_setup() {
 #if !defined(HAS_KEYBOARD) && !defined(HAS_ENCODER)
             LongPress = true;
             long _tmp = millis();
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             while (PrevPress) {
                 if (millis() - _tmp > 150)
                     tft.drawArc(
@@ -443,6 +450,7 @@ void sniffer_setup() {
                     );
                 vTaskDelay(10 / portTICK_RATE_MS);
             }
+            #endif
             if (millis() - _tmp > 700) { // longpress detected to exit
                 returnToMenu = true;
                 _pcap_file.close();
@@ -474,6 +482,7 @@ void sniffer_setup() {
         }
 #endif
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
 	if (check(SelPress)) { // pressed ok - show menu
                 options = {
                     {"New File",
@@ -501,13 +510,15 @@ void sniffer_setup() {
 			 beacon_frames = 0;
 			 registeredBeacons.clear();
 			 deauth_tmp = millis();
-			 
+
                      }                                                                          },
                     {"Exit Sniffer",                             [=]() { returnToMenu = true; } },
                 };
                 loopOptions(options);
             }
-	
+            #endif
+
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         if (redraw) { // Redraw UI
 	  redraw = false;
 
@@ -515,7 +526,7 @@ void sniffer_setup() {
 
 	  //calculate run time
 	  uint32_t runtime = (millis() - start_time)/1000;
-	    
+
 	  if (returnToMenu) goto Exit;
 	  tft.drawPixel(0, 0, 0);
 	  drawMainBorderWithTitle("pcap sniffer"); // Clear Screen and redraw border
@@ -544,13 +555,16 @@ void sniffer_setup() {
 	  tft.drawCentreString("Packets " + String(packet_counter), tftWidth / 2, tftHeight - 26, 1);
 
 	}
+    #endif
 
-	if (currentTime - lastTime > 100) tft.drawPixel(0, 0, 0);
+
+	#if defined(HAS_TFT) || defined(HAS_SCREEN)
+    if (currentTime - lastTime > 100) tft.drawPixel(0, 0, 0);
 
         if (fileOpen && currentTime - lastTime > 1000) {
 	  _pcap_file.flush();     // save file
             lastTime = currentTime; // update time
-            
+
         }
 
         if (deauth && (millis() - deauth_tmp) > DEAUTH_INTERVAL) {
@@ -574,10 +588,11 @@ void sniffer_setup() {
 
             deauth_tmp = millis();
         }
+        #endif
 	//TODO: display a count of wifi networks on the selected channel (count registeredBeacons)
 	//TODO: store a last-seen millis value for each beacon, update it whenever its seen, delete beacon after not hearing
 	//TODO: maybe show a list of SSIDs?
-	
+
 	if(millis() - lastRedraw > 1000) {
 	  redraw = true;
 	  lastRedraw = millis();

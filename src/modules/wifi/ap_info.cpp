@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "ap_info.h"
 
 #include "core/display.h"
@@ -119,3 +120,4 @@ void displayAPInfo() {
     fillInfo(area);
     area.show();
 }
+#endif

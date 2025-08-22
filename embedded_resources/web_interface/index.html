@@ -22,6 +22,9 @@
       </div>
     </div>
     <div class="free-space">
+      <span class="btn-action act-browse block-space wifi-scan" data-action="wifi-scan">
+        Mevcut Ağları Tara
+      </span>
       <span class="btn-action act-browse block-space free-sd" data-path="/" data-drive="SD">
         SDCard [<span>0 MB</span>]
       </span>
@@ -329,5 +332,47 @@
   </div>
   <div class="upload-area hidden"></div>
   <script src="/index.js"></script>
+  <!-- Wi-Fi setup panelini buraya ekle -->
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // WiFi tarama butonuna tıklandığında
+  document.querySelectorAll('.wifi-scan').forEach(btn => {
+    btn.addEventListener('click', () => {
+      fetch('/wifi-scan')
+      .then(resp => resp.json())
+      .then(data => {
+        // Eski listeyi temizle
+        let list = document.getElementById('wifi-list');
+        if (!list) {
+          list = document.createElement('ul');
+          list.id = 'wifi-list';
+          document.querySelector('.action-content').appendChild(list);
+        }
+        list.innerHTML = '';
+
+        data.forEach(net => {
+          const li = document.createElement('li');
+          li.textContent = net.ssid + ' (' + net.rssi + ' dBm)';
+          const connectBtn = document.createElement('button');
+          connectBtn.textContent = 'Bağlan';
+          connectBtn.className = 'btn-action';
+          connectBtn.onclick = () => {
+            const pwd = prompt("Şifreyi giriniz:", "");
+            if (!pwd) return;
+            fetch('/wifi-connect', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+              body: 'ssid=' + encodeURIComponent(net.ssid) + '&password=' + encodeURIComponent(pwd)
+            }).then(resp => resp.text()).then(alert);
+          };
+          li.appendChild(connectBtn);
+          list.appendChild(li);
+        });
+      });
+    });
+  });
+});
+</script>
 </body>
 </html>

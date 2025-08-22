@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 /**
  * @file timer.cpp
  * @author Aleksei Gor (https://github.com/AlekseiGor)
@@ -149,3 +150,4 @@ void Timer::underlineSeconds() {
         bruceConfig.priColor
     );
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_bruteforce.h"
 
 #include "protocols/Ansonic.h"
@@ -158,3 +159,4 @@ void rf_bruteforce() {
         case 5: return;
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "NRF24.h"
 #include "core/display.h"
 #include "core/utils.h"
@@ -112,3 +113,4 @@ void NRF24Menu::drawIcon(float scale) {
         caseX + caseW - 2 * antW - connR, caseY + caseH / 2 - antW / 2, antW, antW, bruceConfig.priColor
     );
 }
+#endif

@@ -116,6 +116,7 @@ void adjustModeSpecificSetting(JammerState &state, uint8_t settingIndex, int adj
  * @param ySpacing Vertical spacing between UI elements
  */
 void renderModeSettings(JammerState &state, int &curY, int ySpacing) {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     switch (state.currentMode) {
         case BASIC:
             // Basic mode has a single timing parameter that controls both mark and space
@@ -129,7 +130,7 @@ void renderModeSettings(JammerState &state, int &curY, int ySpacing) {
             tft.println(" us    ");
             break;
 
-        case ENHANCED_BASIC:
+            case ENHANCED_BASIC:
             // Enhanced Basic mode has separate mark/space timing and power control
             curY += ySpacing;
             tft.setCursor(10, curY);
@@ -207,6 +208,7 @@ void renderModeSettings(JammerState &state, int &curY, int ySpacing) {
             tft.println(String(state.jamDensity));
             break;
     }
+    #endif
 }
 
 /**
@@ -218,6 +220,7 @@ void renderModeSettings(JammerState &state, int &curY, int ySpacing) {
  * @param y Y position for rendering the stats
  */
 void displayStats(JammerState &state, int x, int y) {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     // Set text properties for the stats display
     tft.setTextSize(FP);
     tft.setCursor(tftWidth / 2, tftHeight / 2);
@@ -243,6 +246,7 @@ void displayStats(JammerState &state, int x, int y) {
     // Display efficiency metric
     tft.setCursor(tftWidth / 2, tft.getCursorY() + 12);
     tft.printf("J/s  : %.1f", jps);
+    #endif
 }
 
 /**
@@ -380,7 +384,9 @@ void setupJammer(IRsend &irsend) {
     pinMode(bruceConfig.irTx, OUTPUT);
 
     // Draw UI border on the display
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorder();
+    #endif
 }
 
 /**
@@ -390,6 +396,7 @@ void setupJammer(IRsend &irsend) {
  * @param state Current jammer configuration and state
  */
 void renderJammerUI(JammerState &state) {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     // Throttle UI updates to reduce flicker and improve performance
     uint32_t currentMillis = millis();
     if (!state.redraw && currentMillis - state.lastUIUpdate < 300) return;
@@ -415,6 +422,7 @@ void renderJammerUI(JammerState &state) {
         tft.setTextColor(TFT_CYAN, bruceConfig.bgColor);
         padprint("IR Jammer");
         tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+
     }
 
     // Show activity indicator when jamming is active
@@ -472,6 +480,7 @@ void renderJammerUI(JammerState &state) {
 
     // Reset redraw flag now that UI is updated
     state.redraw = false;
+    #endif
 }
 
 /**
@@ -680,7 +689,9 @@ void cleanupJammer(IRsend &irsend) {
     digitalWrite(bruceConfig.irTx, LOW);
 
     // Display exit message
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayRedStripe("IR Jamming Stopped");
+    #endif
 
     // Short delay for user to see the message
     delay(1000);

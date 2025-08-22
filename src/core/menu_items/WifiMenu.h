@@ -1,6 +1,7 @@
 #ifndef __WIFI_MENU_H__
 #define __WIFI_MENU_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include <MenuItemInterface.h>
 
 class WifiMenu : public MenuItemInterface {
@@ -16,4 +17,5 @@ private:
     void configMenu(void);
 };
 
+#endif
 #endif

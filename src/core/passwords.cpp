@@ -74,7 +74,9 @@ String readDecryptedFileOLD(FS &fs, String filepath) {
 String readDecryptedFile(FS &fs, String filepath) {
 
     if (cachedPassword.length() == 0) {
+#if defined(HAS_KEYBOARD) && (defined(HAS_TFT) || defined(HAS_SCREEN))
         cachedPassword = keyboard("", 32, "password");
+#endif
         if (cachedPassword.length() == 0) return ""; // cancelled
     }
 
@@ -145,7 +147,9 @@ String readDecryptedFile(FS &fs, String filepath) {
     if (!isValidAscii(plaintext)) {
         // invalidate cached password -> will ask again on the next try
         cachedPassword = "";
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("decryption failed (invalid password?)");
+#endif
         // Serial.println(plaintext);
         return "";
     }

@@ -5,27 +5,55 @@ JsonDocument BruceConfig::toJson() const {
     JsonDocument jsonDoc;
     JsonObject setting = jsonDoc.to<JsonObject>();
 
+
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     setting["priColor"] = String(priColor, HEX);
     setting["secColor"] = String(secColor, HEX);
     setting["bgColor"] = String(bgColor, HEX);
     setting["themeFile"] = themePath;
     setting["themeOnSd"] = theme.fs;
-
     setting["rot"] = rotation;
     setting["dimmerSet"] = dimmerSet;
     setting["bright"] = bright;
     setting["tmz"] = tmz;
+#else
+    setting["priColor"] = "";
+    setting["secColor"] = "";
+    setting["bgColor"] = "";
+    setting["themeFile"] = "/";
+    setting["themeOnSd"] = theme.fs;
+    setting["rot"] = 1;
+    setting["dimmerSet"] = 0;
+    setting["bright"] = 0;
+    setting["tmz"] = 0;
+#endif
+
+#ifdef HAS_SOUND
     setting["soundEnabled"] = soundEnabled;
     setting["soundVolume"] = soundVolume;
+#else
+    setting["soundEnabled"] = 0;
+    setting["soundVolume"] = 0;
+#endif
+
     setting["wifiAtStartup"] = wifiAtStartup;
     setting["instantBoot"] = instantBoot;
 
+#ifdef HAS_LED
     setting["ledBright"] = ledBright;
     setting["ledColor"] = String(ledColor, HEX);
     setting["ledBlinkEnabled"] = ledBlinkEnabled;
     setting["ledEffect"] = ledEffect;
     setting["ledEffectSpeed"] = ledEffectSpeed;
     setting["ledEffectDirection"] = ledEffectDirection;
+#else
+    setting["ledBright"] = 0;
+    setting["ledColor"] = "000000";
+    setting["ledBlinkEnabled"] = 0;
+    setting["ledEffect"] = 0;
+    setting["ledEffectSpeed"] = 0;
+    setting["ledEffectDirection"] = 1;
+#endif
 
     JsonObject _webUI = setting["webUI"].to<JsonObject>();
     _webUI["user"] = webUI.user;
@@ -47,16 +75,34 @@ JsonDocument BruceConfig::toJson() const {
     setting["irTxRepeats"] = irTxRepeats;
     setting["irRx"] = irRx;
 
+#if defined (HAS_RF)
     setting["rfTx"] = rfTx;
     setting["rfRx"] = rfRx;
     setting["rfModule"] = rfModule;
     setting["rfFreq"] = rfFreq;
     setting["rfFxdFreq"] = rfFxdFreq;
     setting["rfScanRange"] = rfScanRange;
+#else
+    setting["rfTx"] = 0;        // int
+    setting["rfRx"] = 0;        // int
+    setting["rfModule"] = 0;    // int/enum
+    setting["rfFreq"] = 0.0;    // float
+    setting["rfFxdFreq"] = 0;   // int
+    setting["rfScanRange"] = 0; // int
+#endif
 
-    setting["rfidModule"] = rfidModule;
+    #if defined(RF_ID2)
+    setting["rfidModule"] = M5_RFID2_MODULE;
+    #else
+    setting["rfidModule"] = -1;
+    #endif
 
+    #if defined (HAS_IBUTTON)
     setting["iButton"] = iButton;
+    #else
+    setting["iButton"] = 0;
+    #endif
+
 
     JsonArray _mifareKeys = setting["mifareKeys"].to<JsonArray>();
     for (auto key : mifareKeys) _mifareKeys.add(key);
@@ -296,6 +342,7 @@ void BruceConfig::fromFile(bool checkFS) {
         log_e("Fail");
     }
 
+#ifdef HAS_RF
     if (!setting["rfTx"].isNull()) {
         rfTx = setting["rfTx"].as<int>();
     } else {
@@ -332,6 +379,7 @@ void BruceConfig::fromFile(bool checkFS) {
         count++;
         log_e("Fail");
     }
+#endif
 
     if (!setting["rfidModule"].isNull()) {
         rfidModule = setting["rfidModule"].as<int>();
@@ -447,7 +495,9 @@ void BruceConfig::factoryReset() {
     ESP.restart();
 }
 
+
 void BruceConfig::validateConfig() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     validateRotationValue();
     validateDimmerValue();
     validateBrightValue();
@@ -461,15 +511,19 @@ void BruceConfig::validateConfig() {
     validateLedEffectValue();
     validateLedEffectSpeedValue();
     validateLedEffectDirectionValue();
+#endif
+#ifdef HAS_RF
     validateRfScanRangeValue();
     validateRfModuleValue();
     validateRfidModuleValue();
+#endif
     validateMifareKeysItems();
     validateGpsBaudrateValue();
     validateDevModeValue();
     validateColorInverted();
 }
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 void BruceConfig::setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *background) {
     BruceTheme::_setUiColor(primary, secondary, background);
     saveFile();
@@ -505,6 +559,7 @@ void BruceConfig::setBright(uint8_t value) {
 void BruceConfig::validateBrightValue() {
     if (bright > 100) bright = 100;
 }
+#endif
 
 void BruceConfig::setTmz(int value) {
     tmz = value;
@@ -663,6 +718,7 @@ void BruceConfig::setIrRxPin(int value) {
     saveFile();
 }
 
+#ifdef HAS_RF
 void BruceConfig::setRfTxPin(int value) {
     rfTx = value;
     saveFile();
@@ -704,6 +760,7 @@ void BruceConfig::setRfScanRange(int value, int fxdFreq) {
 void BruceConfig::validateRfScanRangeValue() {
     if (rfScanRange < 0 || rfScanRange > 3) rfScanRange = 3;
 }
+#endif
 
 void BruceConfig::setRfidModule(RFIDModules value) {
     rfidModule = value;

@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_spectrum.h"
 #include "rf_utils.h"
 #include "structs.h"
@@ -137,3 +138,4 @@ void rf_SquareWave() {
     rmt_rx_stop(RMT_RX_CHANNEL);
     delay(10);
 }
+#endif

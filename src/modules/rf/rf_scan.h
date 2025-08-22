@@ -1,6 +1,7 @@
 #ifndef __RF_SCAN_H__
 #define __RF_SCAN_H__
 
+#ifdef HAS_RF
 #include "rf_utils.h"
 #include "structs.h"
 #include <RCSwitch.h>
@@ -87,5 +88,5 @@ bool RCSwitch_SaveSignal(float frequency, RfCodes codes, bool raw, char *key, bo
 
 String rf_scan(float start_freq, float stop_freq, int max_loops = -1);
 String RCSwitch_Read(float frequency = 0, int max_loops = -1, bool raw = false);
-
+#endif
 #endif

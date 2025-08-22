@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "BleMenu.h"
 #include "core/display.h"
 #include "core/utils.h"
@@ -173,3 +174,4 @@ void BleMenu::drawIcon(float scale) {
         bruceConfig.bgColor
     );
 }
+#endif

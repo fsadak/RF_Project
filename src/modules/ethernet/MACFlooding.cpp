@@ -43,9 +43,11 @@ MACFlooding::MACFlooding() {
 MACFlooding::~MACFlooding() { pbuf_free(p); }
 
 void MACFlooding::show_gui() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("MAC Flooding");
 
     displayTextLine("Press prev to stop");
+    #endif
 }
 
 void MACFlooding::loop() {
@@ -56,6 +58,7 @@ void MACFlooding::loop() {
             LongPress = true;
             long _tmp = millis();
             while (PrevPress) {
+                #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                 if (millis() - _tmp > 150)
                     tft.drawArc(
                         tftWidth / 2,
@@ -67,6 +70,7 @@ void MACFlooding::loop() {
                         getColorVariation(bruceConfig.priColor),
                         bruceConfig.bgColor
                     );
+                    #endif
                 vTaskDelay(10 / portTICK_RATE_MS);
             }
             LongPress = false;
@@ -150,14 +154,18 @@ void MACFlooding::setup() {
     randomSeed(millis());
     netif = netif_list;
     if (netif == NULL) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("No interface found");
+        #endif
         Serial.println("No interface found");
         return;
     }
 
     p = pbuf_alloc(PBUF_RAW, PACKET_LENGTH, PBUF_RAM);
     if (p == NULL) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Failed to allocate pbuf");
+        #endif
         Serial.println("Failed to allocate pbuf");
         return;
     }

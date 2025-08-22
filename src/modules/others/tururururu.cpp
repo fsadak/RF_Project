@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "tururururu.h"
 #include "core/display.h"
 #include "core/mykeyboard.h"
@@ -208,3 +209,4 @@ Exit:
     delay(150);
     Serial.println();
 }
+#endif

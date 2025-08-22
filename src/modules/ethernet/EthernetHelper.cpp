@@ -1,3 +1,4 @@
+#if defined(HAS_ETHERNET)
 /**
  * @file EthernetHelper.cpp
  * @author Andrea Canale (https://github.com/andreock)
@@ -199,4 +200,5 @@ void EthernetHelper::stop() {
         esp_netif_destroy(eth_netif_spi); // Destroy interface
     }
 }
+#endif
 #endif

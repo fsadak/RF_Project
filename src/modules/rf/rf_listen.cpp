@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_listen.h"
 
 #include "../others/audio.h"
@@ -96,3 +97,4 @@ void rf_listen() {
 
     detachInterrupt(digitalPinToInterrupt(bruceConfigPins.CC1101_bus.io0));
 }
+#endif

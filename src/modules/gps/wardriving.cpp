@@ -24,8 +24,10 @@ Wardriving::~Wardriving() {
 
 void Wardriving::setup() {
     ioExpander.turnPinOnOff(IO_EXP_GPS, HIGH);
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
     padprintln("Initializing...");
+    #endif
 
     begin_wifi();
     if (!begin_gps()) return;
@@ -42,6 +44,7 @@ void Wardriving::begin_wifi() {
 bool Wardriving::begin_gps() {
     GPSserial.begin(bruceConfig.gpsBaudrate, SERIAL_8N1, GPS_SERIAL_RX, GPS_SERIAL_TX);
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     int count = 0;
     padprintln("Waiting for GPS data");
     while (GPSserial.available() <= 0) {
@@ -53,6 +56,7 @@ bool Wardriving::begin_gps() {
         count++;
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    #endif
 
     gpsConnected = true;
     return true;
@@ -80,23 +84,29 @@ void Wardriving::loop() {
             while (GPSserial.available() > 0) gps.encode(GPSserial.read());
 
             if (gps.location.isUpdated()) {
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 padprintln("GPS location updated");
+                #endif
                 set_position();
                 scan_networks();
             } else {
+                #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                 padprintln("GPS location not updated");
+                #endif
                 dump_gps_data();
 
                 if (filename == "" && gps.date.year() >= CURRENT_YEAR && gps.date.year() < CURRENT_YEAR + 5)
                     create_filename();
             }
         } else {
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             if (count > 5) {
                 displayError("GPS not Found!");
                 return end();
             }
             padprintln("No GPS data available");
             count++;
+            #endif
         }
 
         int tmp = millis();
@@ -118,6 +128,7 @@ void Wardriving::set_position() {
 }
 
 void Wardriving::display_banner() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("Wardriving");
     padprintln("");
 
@@ -128,9 +139,11 @@ void Wardriving::display_banner() {
     }
 
     padprintln("");
+    #endif
 }
 
 void Wardriving::dump_gps_data() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     if (!date_time_updated && (!gps.date.isUpdated() || !gps.time.isUpdated())) {
         padprintln("Waiting for valid GPS data");
         return;
@@ -140,6 +153,7 @@ void Wardriving::dump_gps_data() {
     padprintf(2, "Time: %02d:%02d:%02d\n", gps.time.hour(), gps.time.minute(), gps.time.second());
     padprintf(2, "Sat:  %d\n", gps.satellites.value());
     padprintf(2, "HDOP: %.2f\n", gps.hdop.hdop());
+    #endif
 }
 
 String Wardriving::auth_mode_to_string(wifi_auth_mode_t authMode) {
@@ -162,12 +176,16 @@ void Wardriving::scan_networks() {
 
     int network_amount = WiFi.scanNetworks();
     if (network_amount == 0) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         padprintln("No Wi-Fi networks found", 2);
+        #endif
         return;
     }
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     padprintf(2, "Coord: %.6f, %.6f\n", gps.location.lat(), gps.location.lng());
     padprintln("Networks Found: " + String(network_amount), 2);
+    #endif
 
     return append_to_file(network_amount);
 }
@@ -190,7 +208,9 @@ void Wardriving::create_filename() {
 void Wardriving::append_to_file(int network_amount) {
     FS *fs;
     if (!getFsStorage(fs)) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         padprintln("Storage setup error");
+        #endif
         returnToMenu = true;
         return;
     }
@@ -204,7 +224,9 @@ void Wardriving::append_to_file(int network_amount) {
     File file = (*fs).open("/BruceWardriving/" + filename, is_new_file ? FILE_WRITE : FILE_APPEND);
 
     if (!file) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         padprintln("Failed to open file for writing");
+        #endif
         returnToMenu = true;
         return;
     }

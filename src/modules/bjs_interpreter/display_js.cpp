@@ -1,3 +1,4 @@
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "display_js.h"
 
 #include "helpers_js.h"
@@ -636,3 +637,4 @@ duk_ret_t native_createSprite(duk_context *ctx) {
 
     return 1;
 }
+#endif

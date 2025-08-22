@@ -99,7 +99,9 @@ void brucegotchi_start() {
     uint8_t _times = 0;       // control delays without impacting control btns
     set_pwnagotchi_exit(false);
 
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     tft.fillScreen(bruceConfig.bgColor);
+#endif
     num_HS = 0; // restart pwnagotchi counting
     SavedHS.clear();
     registeredBeacons.clear();          // Clear the registeredBeacon array in case it has something
@@ -188,16 +190,18 @@ void brucegotchi_start() {
         }
         if (check(SelPress)) {
             // moved down here to reset the options, due to use in other parts in pwngrid spam
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             options = {
                 {"Find friends", yield},
                 {"Pwngrid spam", send_pwnagotchi_beacon_main},
                 {"Main Menu", lambdaHelper(set_pwnagotchi_exit, true)},
             };
-            // Display menu
+// Display menu
             loopOptions(options);
             // Redraw footer & header
             tft.fillScreen(bruceConfig.bgColor);
             updateUi(true);
+#endif
         }
         if (pwnagotchi_exit) { break; }
         vTaskDelay(10 / portTICK_RATE_MS);

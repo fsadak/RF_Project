@@ -140,34 +140,34 @@ uint32_t helpCallback(cmd *c) {
     Serial.println("  ir rx raw <timeout>  - Read an IR signal in RAW mode and print the dump on serial.");
     Serial.println("  ir tx <protocol> <address> <decoded_value>  - Send a custom decoded IR signal.");
     Serial.println("  ir tx_from_file <ir file path>  - Send an IR signal saved in storage.");
-    
+
     Serial.println("\nRF Commands:");
     Serial.println("  subghz rx <timeout>       - Read an RF signal and print the dump on serial. (alias: rf rx)");
     Serial.println("  subghz rx raw <timeout>   - Read an RF signal in RAW mode and print the dump on serial. (alias: rf rx raw)");
     Serial.println("  subghz tx <decoded_value> <frequency> <te> <count>  - Send a custom decoded RF signal. (alias: rf tx)");
     Serial.println("  subghz tx_from_file <sub file path>  - Send an RF signal saved in storage.");
-    
+
     Serial.println("\nAudio Commands:");
     Serial.println("  music_player <audio file path>  - Play an audio file.");
     Serial.println("  tone <frequency> <duration>  - Play a single squarewave audio tone.");
     Serial.println("  say <text>   - Text-To-Speech (speaker required).");
-    
+
     Serial.println("\nUI Commands:");
     Serial.println("  led <r/g/b> <0-255>    - Change the UI main color.");
     Serial.println("  clock                 - Show the clock UI.");
-    
+
     Serial.println("\nPower Management:");
     Serial.println("  power <off/reboot/sleep>  - General power management.");
-    
+
     Serial.println("\nGPIO Commands:");
     Serial.println("  gpio mode <pin number> <0/1>  - Set GPIO pins mode (0=input, 1=output).");
     Serial.println("  gpio set <pin number> <0/1>   - Direct GPIO pins control (0=off, 1=on).");
-    
+
     Serial.println("\nI2C and Storage:");
     Serial.println("  i2c scan                - Scan for modules connected to the I2C bus.");
     Serial.println("  storage <list/remove/mkdir/rename/read/write/copy/md5/crc32> <file path>  - Common file management commands.");
     Serial.println("  ls - Same as storage list");
-    
+
     Serial.println("\nSettings:");
     Serial.println("  settings                - View all the current settings.");
     Serial.println("  settings <name>         - View a single setting value.");
@@ -176,7 +176,7 @@ uint32_t helpCallback(cmd *c) {
 
     return true;
 }
- 
+
 
 void optionsList() {
     int i = 0;
@@ -278,6 +278,7 @@ uint32_t optionsJsonCallback(cmd *c) {
 }
 
 uint32_t displayCallback(cmd *c) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     Command cmd(c);
     Argument arg = cmd.getArgument("option");
     String opt = arg.getValue();
@@ -294,7 +295,9 @@ uint32_t displayCallback(cmd *c) {
         uint8_t binData[MAX_LOG_ENTRIES * MAX_LOG_SIZE];
         size_t binSize = 0;
 
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         tft.getBinLog(binData, binSize);
+        #endif
 
         Serial.println("Binary Dump:");
         for (size_t i = 0; i < binSize; i++) {
@@ -303,6 +306,7 @@ uint32_t displayCallback(cmd *c) {
             Serial.printf("%02X ", binData[i]);
         }
         Serial.println("\n[End of Dump]");
+
     } else {
         Serial.println(
             "Display command accept:\n"
@@ -313,6 +317,7 @@ uint32_t displayCallback(cmd *c) {
         );
         return false;
     }
+    #endif
     return true;
 }
 
@@ -320,61 +325,71 @@ uint32_t loaderCallback(cmd *c) {
     Command cmd(c);
     String arg = cmd.getArgument("cmd").getValue();
     String appname = cmd.getArgument("appname").getValue();
-    
+
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     std::vector<MenuItemInterface *> _menuItems = mainMenu.getItems();
-    int _totalItems = _menuItems.size();    
-    
+    int _totalItems = _menuItems.size();
+    #endif
+
     if (arg == "list") {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         for (int i = 0; i < _totalItems; i++) {
-            Serial.println( _menuItems[i]->getName() );
+            Serial.println(_menuItems[i]->getName());
         }
+        #endif
         Serial.println("BadUSB");
         Serial.println("WebUI");
         Serial.println("LittleFS");
         return true;
-        
-    } else if (arg == "open") {
-        if(!appname.isEmpty()) {
-            // look for a matching name
+    }
+
+    if (arg == "open") {
+        if (!appname.isEmpty()) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             for (int i = 0; i < _totalItems; i++) {
-                if(appname.equalsIgnoreCase(_menuItems[i]->getName())) {
-                    // open the associated app
+                if (appname.equalsIgnoreCase(_menuItems[i]->getName())) {
                     _menuItems[i]->optionsMenu();
                     return true;
                 }
             }
-            // additional shortcuts
-            if(appname.equalsIgnoreCase("badusb")) {
+            #endif
+
+            if (appname.equalsIgnoreCase("badusb")) {
+                #if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
                 ducky_setup(hid_usb, false);
                 return true;
+                #else
+                Serial.println("BadUSB not found");
+                return false;
+                #endif
             }
-            else if(appname.equalsIgnoreCase("webui")) {
+
+            if (appname.equalsIgnoreCase("webui")) {
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 loopOptionsWebUi();
+                #endif
                 return true;
             }
-            else if(appname.equalsIgnoreCase("littlefs")) {
+
+            if (appname.equalsIgnoreCase("littlefs")) {
                 loopSD(LittleFS);
                 return true;
             }
-            // else no matching app name found
+
             Serial.println("app not found: " + appname);
             return false;
         }
-        
-    } else {
-        Serial.println(
-            "Loader command accept:\n"
-            "loader list : Lists available applications\n"
-            "loader open appname  : Runs the entered application.\n"
-        );
-        return false;
     }
-    
-    // TODO: close: Closes the running application.
-    // TODO: info: Displays the loader’s state.
+
+    Serial.println(
+        "Loader command accept:\n"
+        "loader list : Lists available applications\n"
+        "loader open appname  : Runs the entered application.\n"
+    );
     return false;
 }
-        
+
+
 void createUtilCommands(SimpleCLI *cli) {
     cli->addCommand("uptime", uptimeCallback);
     cli->addCommand("date", dateCallback);
@@ -392,7 +407,7 @@ void createUtilCommands(SimpleCLI *cli) {
 
     Command opt = cli->addCommand("options,option", optionsCallback);
     opt.addPosArg("run", "-1");
-    
+
     Command loader = cli->addCommand("loader", loaderCallback);
     loader.addPosArg("cmd");
     loader.addPosArg("appname", "none");  // optional

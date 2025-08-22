@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "file_sharing.h"
 #include "core/display.h"
 #include <SD.h>
@@ -173,3 +174,4 @@ void FileSharing::createFilename(FS *fs, FileSharing::Message fileMessage) {
 
     recvFileName = messageFilepath + "/" + filename + ext;
 }
+#endif

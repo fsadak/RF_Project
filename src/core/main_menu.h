@@ -1,6 +1,7 @@
 #ifndef __MAIN_MENU_H__
 #define __MAIN_MENU_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include <MenuItemInterface.h>
 
 #include "menu_items/BleMenu.h"
@@ -53,4 +54,5 @@ private:
 };
 extern MainMenu mainMenu;
 
+#endif
 #endif

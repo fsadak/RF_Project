@@ -25,7 +25,9 @@ uint32_t jsFileCallback(cmd *c) {
     FS *fs;
     if (!getFsStorage(fs)) return false;
 
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     run_bjs_script_headless(*fs, filepath);
+#endif
     return true;
 }
 
@@ -57,7 +59,11 @@ uint32_t jsBufferCallback(cmd *c) {
     f.close();
     free(txt);
 
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     bool r = run_bjs_script_headless(PSRamFS, tmpfilepath);
+#else
+    bool r = false;
+#endif
     PSRamFS.remove(tmpfilepath);
 
     return r;
@@ -66,9 +72,12 @@ uint32_t jsBufferCallback(cmd *c) {
 void createInterpreterCommands(SimpleCLI *cli) {
     Command jsCmd = cli->addCompositeCmd("js,run,interpret/er");
 
-    Command fileCmd = jsCmd.addCommand("run_from_file", jsFileCallback);  // TODO: remove "run_from_file" for flipper0-compatiblity  https://docs.flipper.net/development/cli/#GjMyY
+    Command fileCmd = jsCmd.addCommand(
+        "run_from_file", jsFileCallback
+    ); // TODO: remove "run_from_file" for flipper0-compatiblity
+       // https://docs.flipper.net/development/cli/#GjMyY
     fileCmd.addPosArg("filepath");
 
     Command bufferCmd = jsCmd.addCommand("run_from_buffer", jsBufferCallback);
-    bufferCmd.addPosArg("fileSize", "0");  // optional arg
+    bufferCmd.addPosArg("fileSize", "0"); // optional arg
 }

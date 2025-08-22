@@ -1,3 +1,4 @@
+#if defined(HAS_CHAMELON)
 /**
  * @file chameleon.cpp
  * @author Rennan Cockles (https://github.com/rennancockles)
@@ -993,3 +994,4 @@ void Chameleon::fullScanTags() {
     scanLFTags();
     scanHFTags();
 }
+#endif

@@ -1,3 +1,4 @@
+#if defined(HAS_OPEN_HAY) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -339,3 +340,4 @@ void openhaystack_setup() {
 
     openhaystack_loop();
 }
+#endif

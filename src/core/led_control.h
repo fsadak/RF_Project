@@ -1,8 +1,9 @@
 #ifndef __LED_CONTROL_H__
 #define __LED_CONTROL_H__
+
+#ifdef HAS_RGB
 #include <globals.h>
 
-#ifdef HAS_RGB_LED
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -34,9 +35,6 @@ void ledEffects(bool enable);
 void ledPreviewMode(bool enable);
 void setLedBrightness(int value);
 void setLedBrightnessConfig();
-
-#else
 inline void blinkLed(int blinkTime = 50) {};
 #endif
-
 #endif

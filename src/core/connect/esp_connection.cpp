@@ -1,5 +1,7 @@
 #include "esp_connection.h"
-#include "core/display.h"
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+    #include "core/display.h"
+#endif
 #include <WiFi.h>
 
 // Initialize the static instance pointer
@@ -22,15 +24,20 @@ bool EspConnection::beginSend() {
 
     sendPing();
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     loopOptions(peerOptions);
+    #endif
 
     peerOptions.clear();
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!setupPeer(dstAddress)) {
         displayError("Failed to add peer");
         delay(1000);
         return false;
     }
+    #endif
+
 
     return true;
 }
@@ -39,13 +46,17 @@ bool EspConnection::beginEspnow() {
     WiFi.mode(WIFI_STA);
 
     if (esp_now_init() != ESP_OK) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Error initializing share");
+        #endif
         delay(1000);
         return false;
     }
 
     if (!setupPeer(broadcastAddress)) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Failed to add peer");
+        #endif
         delay(1000);
         return false;
     }

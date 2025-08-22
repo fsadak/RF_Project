@@ -56,6 +56,7 @@ void nrf_jammer() {
         NRFradio.setPayloadSize(2);  // optional
         if (!NRFradio.setDataRate(RF24_2MBPS)) Serial.println("Fail setting data Rate");
         bool redraw = true;
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         drawMainBorder();
         while (!check(SelPress)) {
             if (redraw) {
@@ -142,18 +143,22 @@ void nrf_jammer() {
                 NRF_MODE_N_X = NRF_MODE_N;
             }
         }
+        #endif
 
         NRFradio.stopConstCarrier(); // this will stop jamming without powering down nrf
                                      // NRFradio.powerDown(); power down without powering up on scanner
 
     } else {
         Serial.println("Fail Starting radio");
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("NRF24 not found");
+        #endif
         delay(500);
     }
 }
 
 void nrf_channel_jammer() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     if (nrf_start()) {
         Serial.println("NRF24 turned On");
 
@@ -226,4 +231,5 @@ void nrf_channel_jammer() {
         displayError("NRF24 not found");
         delay(500);
     }
+    #endif
 }

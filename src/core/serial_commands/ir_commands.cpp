@@ -1,3 +1,4 @@
+#if defined(HAS_IR)
 #include "ir_commands.h"
 #include "core/sd_functions.h"
 #include "helpers.h"
@@ -148,23 +149,23 @@ uint32_t irSendCallback(cmd *c) {
     // tasmota json command  https://tasmota.github.io/docs/Tasmota-IR/#sending-ir-commands
     // e.g. IRSend {\"Protocol\":\"NEC\",\"Bits\":32,\"Data\":\"0x20DF10EF\"}
     // TODO: decode "data" into "address+command" and use existing "send*Command" funcs
-    
+
     Command cmd(c);
-    
+
     Argument args = cmd.getArgument(0);
     String args_str = args.getValue();
     args_str.trim();
     //Serial.println(command);
-    
+
     JsonDocument jsonDoc;
     if( deserializeJson(jsonDoc, args_str) ) {
         Serial.println("Failed to parse json");
         Serial.println(args_str);
         return false;
     }
-    
+
     JsonObject args_json = jsonDoc.as<JsonObject>();  // root
-    
+
     uint16_t bits = 32; // defaults to 32 bits
     String protocolStr = "nec"; // defaults to NEC protocol
     String dataStr = "";
@@ -175,10 +176,10 @@ uint32_t irSendCallback(cmd *c) {
     } else {
         dataStr = args_json["Data"].as<String>();
     }
-    
+
     if (!args_json["Protocol"].isNull())
         protocolStr = args_json["Protocol"].as<String>();
-    
+
     if (!args_json["Bits"].isNull())
         bits = args_json["Bits"].as<int>();
 
@@ -220,7 +221,8 @@ void createIrCommands(SimpleCLI *cli) {
     createIrTxRawCommand(&cmd);
     createIrTxFileCommand(&cmd);
     createIrTxBufferCommand(&cmd);
-    
+
     cli->addSingleArgCmd("IRSend", irSendCallback);
-    
+
 }
+#endif

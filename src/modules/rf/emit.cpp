@@ -1,6 +1,8 @@
 #include "emit.h"
+#ifdef HAS_RF
 #include "modules/rf/rf_utils.h" // for initRfModule
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
+#endif
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
@@ -12,10 +14,13 @@ volatile bool escPressed = false;
 volatile float frequency = 0.0;
 
 // Task handle for the periodic task
+#ifdef HAS_RF
 TaskHandle_t rf_raw_emit_draw_handle = NULL;
+#endif
 
 // FreeRTOS task to handle periodic updates
 void rf_raw_emit_draw(void *parameter) {
+#ifdef HAS_RF
     tft.fillScreen(bruceConfig.bgColor);
     drawMainBorder();
     tft.setCursor(20, 38);
@@ -57,9 +62,11 @@ void rf_raw_emit_draw(void *parameter) {
         // Delay for 100ms
         vTaskDelay(pdMS_TO_TICKS(100));
     }
+#endif
 }
 
 void rf_raw_emit(RawRecording &recorded, bool &returnToMenu) {
+#ifdef HAS_RF
     rssiCount = 0;
     selPressed = false;
     escPressed = false;
@@ -108,4 +115,5 @@ void rf_raw_emit(RawRecording &recorded, bool &returnToMenu) {
     deinitRfModule();
 
     if (escPressed) returnToMenu = true;
+#endif
 }

@@ -55,7 +55,9 @@ void stationDeauth(Host host) {
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAP(tssid, emptyString, channel, 1, 4, false)) {
         Serial.println("Fail Starting AP Mode");
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Fail starting Deauth", true);
+        #endif
         return;
     }
 
@@ -66,6 +68,7 @@ void stationDeauth(Host host) {
     // Prepare deauth frame for each AP record
     memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("Station Deauth");
     tft.setTextSize(FP);
     padprintln("Trying to deauth one target.");
@@ -74,6 +77,7 @@ void stationDeauth(Host host) {
     padprintln("GTW:" + macToString(gatewayMAC));
     padprintln("");
     padprintln("Press Any key to STOP.");
+    #endif
 
     long tmp = millis();
     int cont = 0;
@@ -95,7 +99,9 @@ void stationDeauth(Host host) {
         cont += 3 * 4;
         delay(50);
         if (millis() - tmp > 1000) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.drawRightString(String(cont) + " fps", tftWidth - 12, tftHeight - 16, 1);
+            #endif
             cont = 0;
             tmp = millis();
         }

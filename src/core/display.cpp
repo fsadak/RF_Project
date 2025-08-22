@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "display.h"
 #include "core/wifi/webInterface.h" // for server
 #include "core/wifi/wg.h"           //for isConnectedWireguard to print wireguard lock
@@ -1721,4 +1722,5 @@ bool drawPNG(FS &fs, String filename, int x, int y, bool center) {
 bool drawPNG(FS &fs, String filename, int x, int y, bool center) {
     log_w("PNG: Not supported in this version");
 }
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if (defined(HAS_BRUCE_TFT) || defined(HAS_SCREEN))
 #include <tftLogger.h>
 
 /*
@@ -468,3 +469,4 @@ size_t tft_logger::printf(const char *format, ...) {
     va_end(args);
     return print(String(buf));
 }
+#endif

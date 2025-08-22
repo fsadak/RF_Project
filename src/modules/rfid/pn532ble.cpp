@@ -1,3 +1,4 @@
+#if defined(HAS_PN532_BLE) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "pn532ble.h"
 #include "apdu.h"
 #include "core/display.h"
@@ -1474,3 +1475,4 @@ String Pn532ble::saveHfDumpBinFile(std::vector<uint8_t> data, String uid, String
     file.close();
     return fileName;
 }
+#endif

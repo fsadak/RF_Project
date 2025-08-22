@@ -6,7 +6,9 @@
 #include "interpreter_commands.h"
 #include "ir_commands.h"
 #include "power_commands.h"
+#ifdef HAS_RF
 #include "rf_commands.h"
+#endif
 #include "screen_commands.h"
 #include "settings_commands.h"
 #include "sound_commands.h"
@@ -34,9 +36,13 @@ void SerialCli::setup() {
 
     createCryptoCommands(&_cli);
     createGpioCommands(&_cli);
+    #if defined(HAS_IR)
     createIrCommands(&_cli);
+    #endif
     createPowerCommands(&_cli);
+#ifdef HAS_RF
     createRfCommands(&_cli);
+#endif
     createSettingsCommands(&_cli);
     createStorageCommands(&_cli);
     createUtilCommands(&_cli);

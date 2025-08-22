@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "scrollableTextArea.h"
 #define _scrollBuffer tft
 ScrollableTextArea::ScrollableTextArea(const String &title)
@@ -195,3 +196,4 @@ void ScrollableTextArea::draw(bool force) {
 
     _redraw = false;
 }
+#endif

@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "RFMenu.h"
 #include "core/display.h"
 #include "core/settings.h"
@@ -12,6 +13,7 @@
 #include "modules/rf/rf_waterfall.h"
 
 void RFMenu::optionsMenu() {
+#ifdef HAS_RF
     options = {
         {"Scan/copy",       [=]() { RFScan(); }       },
         {"Record RAW",      rf_raw_record             }, // Pablo-Ortiz-Lopez
@@ -35,9 +37,11 @@ void RFMenu::optionsMenu() {
     else txt += " Tx: " + String(bruceConfig.rfTx) + " Rx: " + String(bruceConfig.rfRx);
 
     loopOptions(options, MENU_TYPE_SUBMENU, txt.c_str());
+#endif
 }
 
 void RFMenu::configMenu() {
+#ifdef HAS_RF
     options = {
         {"RF TX Pin", lambdaHelper(gsetRfTxPin, true)},
         {"RF RX Pin", lambdaHelper(gsetRfRxPin, true)},
@@ -47,13 +51,17 @@ void RFMenu::configMenu() {
     };
 
     loopOptions(options, MENU_TYPE_SUBMENU, "RF Config");
+#endif
 }
 void RFMenu::drawIconImg() {
+#ifdef HAS_RF
     drawImg(
         *bruceConfig.themeFS(), bruceConfig.getThemeItemImg(bruceConfig.theme.paths.rf), 0, imgCenterY, true
     );
+#endif
 }
 void RFMenu::drawIcon(float scale) {
+#ifdef HAS_RF
     clearIconArea();
     int radius = scale * 7;
     int deltaRadius = scale * 10;
@@ -136,4 +144,6 @@ void RFMenu::drawIcon(float scale) {
         bruceConfig.priColor,
         bruceConfig.bgColor
     );
+#endif
 }
+#endif

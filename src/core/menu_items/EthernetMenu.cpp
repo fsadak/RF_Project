@@ -1,4 +1,4 @@
-
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "EthernetMenu.h"
 #if !defined(LITE_VERSION)
 #include "core/display.h"
@@ -108,4 +108,5 @@ void EthernetMenu::drawIcon(float scale) {
         bruceConfig.priColor
     );
 }
+#endif
 #endif

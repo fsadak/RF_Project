@@ -83,6 +83,7 @@ void HostInfo::setup(const Host &host) {
     const int TIMEOUT_MS = 1000;     // Timeout for each connection attempt
     int scannedPorts = 0;
     // Initialize display
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorder();
     tft.setTextSize(FP);
     tft.setCursor(8, 30);
@@ -95,6 +96,7 @@ void HostInfo::setup(const Host &host) {
     tft.print("Scanning Ports...(hold esc to cancel)");
     tft.setCursor(8, 78);
     tft.print("Ports Open: ");
+    #endif
 
     std::vector<PortScan> scans(MAX_SIMULTANEOUS);
     auto portIter = portServices.begin();
@@ -106,6 +108,7 @@ void HostInfo::setup(const Host &host) {
     bool scanCanceled = false;
     while ((portIter != portServices.end() || activeScanCount > 0) && !scanCanceled) {
         // Check for escape press
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         if (check(EscPress)) {
             scanCanceled = true;
             // Stop all active scans
@@ -117,6 +120,7 @@ void HostInfo::setup(const Host &host) {
             }
             break;
         }
+        #endif
 
         // Start new scans if possible
         while (activeScanCount < MAX_SIMULTANEOUS && portIter != portServices.end()) {
@@ -125,10 +129,12 @@ void HostInfo::setup(const Host &host) {
                     scan.port = portIter->first;
                     scan.startTime = millis();
                     scan.inProgress = true;
+                    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                     printFootnote(
                         "scannng port: " + String(scan.port) +
                         " | remaining: " + String(portServices.size() - scannedPorts)
                     ); // printa portas escaneadas e restantes
+                    #endif
 
                     client_connect(host.ip, scan.port);
                     activeScanCount++;
@@ -143,10 +149,12 @@ void HostInfo::setup(const Host &host) {
             if (scan.inProgress) {
                 // Check if connected
                 if (client_connected()) {
+                    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                     if (tft.getCursorX() > (240 - LW * 4)) tft.setCursor(7, tft.getCursorY() + LH);
                     tft.setCursor(7, tft.getCursorY() + LH);
                     tft.print(scan.port);
                     tft.print(" (" + String(portServices[scan.port]) + ")");
+                    #endif
                     client_stop();
                     scan.inProgress = false;
                     activeScanCount--;
@@ -163,6 +171,7 @@ void HostInfo::setup(const Host &host) {
         yield(); // Allow other tasks to run
     }
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     tft.setCursor(8, tft.getCursorY() + 16);
     if (scanCanceled) {
         tft.print("Scan Canceled!");
@@ -172,4 +181,5 @@ void HostInfo::setup(const Host &host) {
 
     while (check(SelPress)) yield();
     while (!check(SelPress)) yield();
+    #endif
 }

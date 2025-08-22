@@ -26,6 +26,7 @@ uint8_t menu_current_cmd = 0;
 uint8_t menu_current_opt = 0;
 
 void initUi() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextSize(1);
     tft.fillScreen(bruceConfig.bgColor);
     tft.setTextColor(bruceConfig.priColor);
@@ -38,6 +39,7 @@ void initUi() {
     canvas_bot_h = display_h * .9;
     canvas_peers_menu_h = display_h * .8;
     canvas_peers_menu_w = display_w * .8;
+    #endif
 }
 
 String getRssiBars(signed int rssi) {
@@ -59,25 +61,31 @@ String getRssiBars(signed int rssi) {
 }
 
 void drawTime() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.drawPixel(0, 0, 0);
     tft.fillRect(80, 0, display_w, canvas_top_h - 3, bruceConfig.bgColor);
     tft.setTextDatum(TR_DATUM);
+    #endif
     unsigned long ellapsed = millis() / 1000;
     int8_t h = ellapsed / 3600;
     int sr = ellapsed % 3600;
     int8_t m = sr / 60;
     int8_t s = sr % 60;
     char right_str[50] = "UPS 0%  UP 00:00:00";
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     sprintf(right_str, "UPS %i%% UP %02d:%02d:%02d", getBattery(), h, m, s);
     tft.drawString(right_str, display_w, 3);
+    #endif
 }
 
 void drawFooterData(uint8_t friends_run, uint8_t friends_tot, String last_friend_name, signed int rssi) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.drawPixel(0, 0, 0);
     tft.fillRect(0, canvas_bot_h + 1, display_w - 50, canvas_bot_h + 10, bruceConfig.bgColor);
     tft.setTextSize(1);
     tft.setTextColor(bruceConfig.priColor);
     tft.setTextDatum(TL_DATUM);
+    #endif
 
     String rssi_bars = getRssiBars(rssi);
     String stats = "FRND 0 (0)";
@@ -86,7 +94,9 @@ void drawFooterData(uint8_t friends_run, uint8_t friends_tot, String last_friend
                 last_friend_name.substring(0, 13) + "] " + rssi_bars;
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.drawString(stats, 0, canvas_bot_h + 5);
+    #endif
 }
 
 void updateUi(bool show_toolbars) {
@@ -96,6 +106,7 @@ void updateUi(bool show_toolbars) {
     bool mood_broken = isCurrentMoodBroken();
 
     // Draw header and footer
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (show_toolbars) {
         drawTopCanvas();
         if (tftHeight > 150) drawTime();
@@ -106,6 +117,7 @@ void updateUi(bool show_toolbars) {
             getPwngridClosestRssi()
         );
     }
+    #endif
 
     // Draw mood
     drawMood(mood_face, mood_phrase, mood_broken);
@@ -116,6 +128,7 @@ void updateUi(bool show_toolbars) {
 }
 
 void drawTopCanvas() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     // prepare canvas
     tft.setTextSize(1);
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
@@ -127,9 +140,11 @@ void drawTopCanvas() {
     tft.fillRect(0, 0, display_w, canvas_top_h, bruceConfig.bgColor);
     tft.drawString(buffer, 0, 3);
     tft.drawLine(0, canvas_top_h - 1, display_w, canvas_top_h - 1, bruceConfig.priColor);
+    #endif
 }
 
 void drawBottomCanvas() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     // prepare canvas
     tft.setTextSize(1);
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
@@ -139,9 +154,11 @@ void drawBottomCanvas() {
     tft.fillRect(0, canvas_bot_h, display_w, canvas_bot_h + 10, bruceConfig.bgColor);
     tft.drawString("NOT AI", display_w, canvas_bot_h + 5);
     tft.drawLine(0, canvas_bot_h, display_w, canvas_bot_h, bruceConfig.priColor);
+    #endif
 }
 
 void drawMood(String face, String phrase, bool broken) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     // prepare canvas
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     tft.setTextSize(FG + 1);
@@ -156,4 +173,5 @@ void drawMood(String face, String phrase, bool broken) {
     // draw screen
     tft.drawPixel(0, 0, 0);
     tft.drawCentreString(phrase, canvas_center_x, canvas_h - 30, SMOOTH_FONT);
+    #endif
 }

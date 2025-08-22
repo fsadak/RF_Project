@@ -1,6 +1,6 @@
 # RF_Project – Headless Mod: Tanımladık Ama Dinletemedik 😤🧪
 
-## 🇹🇷 Türkçe
+## Türkçe
 
 Bu proje, `#define HEADLESS` satırının aslında bir illüzyon olduğunu acı ama komik bir şekilde fark ettiğimiz bir firmware laboratuvarıdır.
 
@@ -19,10 +19,12 @@ Bu proje, `#define HEADLESS` satırının aslında bir illüzyon olduğunu acı 
 - Kodun “headless” değil “headstrong” olduğunu belgelemek
 
 🧪 Bonus: Eğer `#define HEADLESS` seni kandırdıysa, yalnız değilsin. Biz de bir hafta boyunca kandırıldık.
+🧪 Gerçeklik Kontrolü: HEADLESS modu bir mod değildir. Bir ruh halidir. Biz tanımladık. Sistem bunu görmezden geldi. Testlerimiz şimdi bu ihaneti doğruluyor.
+🏗️ Yapım aşamasında. İndirip de başınızı belaya sokmayın....
 
 ---
 
-## 🇬🇧 English
+## English
 
 This project is a firmware lab built on the painful realization that `#define HEADLESS` is more of a costume than a command.
 
@@ -44,3 +46,4 @@ This project is a firmware lab built on the painful realization that `#define HE
 
 🧪 Bonus: If #define HEADLESS tricked you into believing you were in control, welcome to the club. We spent a whole week chasing a mirage.
 🧪 Reality Check: HEADLESS mode is not a mode. It’s a mood. We defined it. The system ignored it. Our tests now verify the betrayal.
+🏗️ Under construction. Don't download it and get yourself into trouble...

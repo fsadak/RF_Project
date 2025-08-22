@@ -1,8 +1,11 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "mykeyboard.h"
 #include "core/wifi/webInterface.h"
 #include "modules/ir/TV-B-Gone.h"
 #include "modules/ir/custom_ir.h"
+#ifndef HAS_RF
 #include "modules/rf/rf_send.h"
+#endif
 #include "powerSave.h"
 #include "sd_functions.h"
 #include <ArduinoJson.h>
@@ -56,57 +59,55 @@ keyStroke _getKeyPress() {
 #endif
 } // must return something that the keyboards won´t recognize by default
 
-
 /*********************************************************************
 ** Function: checkShortcutPress
 ** location: mykeyboard.cpp
 ** runs a function called by the shortcut action
 **********************************************************************/
 void checkShortcutPress() {
-    static StaticJsonDocument<512> shortcutsJson;  // parsed only once
-    
+    static StaticJsonDocument<512> shortcutsJson; // parsed only once
+
     // lazy init
-    if(shortcutsJson.size() == 0) {
+    if (shortcutsJson.size() == 0) {
         FS *fs;
         if (!getFsStorage(fs)) return;
         File file = fs->open("/shortcuts.json", FILE_READ);
-		if (!file) {
-			log_e("Shortcuts Config file not found. Using default values");
-            JsonObject shortcuts = shortcutsJson.to<JsonObject>();  // root
+        if (!file) {
+            log_e("Shortcuts Config file not found. Using default values");
+            JsonObject shortcuts = shortcutsJson.to<JsonObject>(); // root
             shortcuts["i"] = "loader open ir";
             shortcuts["r"] = "loader open rf";
             shortcuts["s"] = "loader open rf";
             shortcuts["b"] = "loader open badusb";
             shortcuts["w"] = "loader open webui";
             shortcuts["f"] = "loader open files";
-			return;
-		}
-		// else
-		if (deserializeJson(shortcutsJson, file)) {
-			log_e("Failed to parse shortcuts.json");
+            return;
+        }
+        // else
+        if (deserializeJson(shortcutsJson, file)) {
+            log_e("Failed to parse shortcuts.json");
             file.close();
-			return;
-		}
-		file.close();
+            return;
+        }
+        file.close();
     }
-    
+
     keyStroke key = _getKeyPress();
-    
+
     // parse shortcutsJson and check the keys
     for (JsonPair kv : shortcutsJson.as<JsonObject>()) {
-        const char* shortcut_key = kv.key().c_str();
-        const char* shortcut_value = kv.value().as<const char*>();
-        
+        const char *shortcut_key = kv.key().c_str();
+        const char *shortcut_value = kv.value().as<const char *>();
+
         // check for matching keys
         for (auto i : key.word) {
-            if(i == *shortcut_key) {  // compare the 1st char of the key string
+            if (i == *shortcut_key) { // compare the 1st char of the key string
                 // execute the associated action
                 serialCli.parse(String(shortcut_value));
             }
         }
     }
 }
-
 
 /*********************************************************************
 ** Function: checkNumberShortcutPress
@@ -727,3 +728,4 @@ void goToDeepSleep() {
 }
 
 void checkReboot() {}
+#endif

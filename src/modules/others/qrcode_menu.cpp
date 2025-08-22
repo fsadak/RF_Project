@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "qrcode_menu.h"
 #include "../lib/TFT_eSPI_QRcode/src/qrcode.h"
 #include "core/config.h"
@@ -134,3 +135,4 @@ void remove_custom_qrcode() {
 
     loopOptions(options);
 }
+#endif

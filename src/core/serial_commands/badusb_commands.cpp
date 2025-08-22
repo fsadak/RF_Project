@@ -27,6 +27,7 @@ uint32_t badusbFileCallback(cmd *c) {
     }
 
 #ifdef USB_as_HID
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     ducky_startKb(hid_usb, KeyboardLayout_en_US, false);
     key_input(*fs, filepath, hid_usb);
     delete hid_usb;
@@ -38,6 +39,7 @@ uint32_t badusbFileCallback(cmd *c) {
     // Serial.begin(115200);
 
     return true;
+#endif
 #else
     return false;
 #endif
@@ -47,7 +49,7 @@ uint32_t badusbBufferCallback(cmd *c) {
     if (!(_setupPsramFs())) return false;
 
     char *txt = _readFileFromSerial();
-    String tmpfilepath = "/tmpramfile"; // TODO: Change to use char *txt directly
+    String tmpfilepath = "/tmpramfile";
     File f = PSRamFS.open(tmpfilepath, FILE_WRITE);
     if (!f) return false;
 
@@ -56,18 +58,21 @@ uint32_t badusbBufferCallback(cmd *c) {
     free(txt);
 
 #ifdef USB_as_HID
-    ducky_startKb(hid_usb, KeyboardLayout_en_US, false);
-    key_input(PSRamFS, tmpfilepath, hid_usb);
-    delete hid_usb;
-    hid_usb = nullptr;
+    #if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
+        ducky_startKb(hid_usb, KeyboardLayout_en_US, false);
+        key_input(PSRamFS, tmpfilepath, hid_usb);
+        delete hid_usb;
+        hid_usb = nullptr;
+
+        PSRamFS.remove(tmpfilepath);
+        return true;
+    #endif
+#endif
 
     PSRamFS.remove(tmpfilepath);
-    return true;
-#else
-    PSRamFS.remove(tmpfilepath);
-    return false;
-#endif
+    return false;  // ← fallback return, her durumda garanti
 }
+
 
 void createBadUsbCommands(SimpleCLI *cli) {
     Command badusbCmd = cli->addCompositeCmd("bu,badusb");

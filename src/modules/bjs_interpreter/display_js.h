@@ -1,7 +1,10 @@
 #ifndef __DISPLAY_JS_H__
 #define __DISPLAY_JS_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "core/display.h"
+#endif
+#if defined(HAS_DUCT)
 #include <duktape.h>
 
 void clearDisplayModuleData();
@@ -93,5 +96,5 @@ inline void internal_print(duk_context *ctx, uint8_t printTft, uint8_t newLine) 
         Serial.println();
     }
 }
-
+#endif
 #endif

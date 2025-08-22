@@ -1,3 +1,4 @@
+#if defined(HAS_TAGOMATIC)
 /**
  * @file tag_o_matic.cpp
  * @author Rennan Cockles (https://github.com/rennancockles)
@@ -52,7 +53,9 @@ void TagOMatic::setup() {
     set_rfid_module();
 
     if (!_rfid->begin()) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("RFID module not found!");
+#endif
         delay(2000);
         return;
     }
@@ -87,6 +90,7 @@ void TagOMatic::loop() {
 }
 
 void TagOMatic::select_state() {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     options = {};
     if (_read_uid) {
         options.emplace_back("Clone UID", [=]() { set_state(CLONE_MODE); });
@@ -102,11 +106,14 @@ void TagOMatic::select_state() {
     options.emplace_back("Erase tag", [=]() { set_state(ERASE_MODE); });
 
     loopOptions(options);
+#endif
 }
 
 void TagOMatic::set_state(RFID_State state) {
     current_state = state;
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
+#endif
     if (_scanned_set.size() > 0) {
         save_scan_result();
         _scanned_set.clear();
@@ -118,27 +125,55 @@ void TagOMatic::set_state(RFID_State state) {
     switch (state) {
         case READ_MODE:
         case LOAD_MODE: _read_uid = false; break;
+
         case SCAN_MODE:
             _scanned_set.clear();
             _scanned_tags.clear();
             break;
-        case CHECK_MODE:
-            _sourceUID = _rfid->printableUID.uid;
-            _sourcePages = _rfid->strAllPages;
+
+        case CHECK_MODE: _sourceUID = _rfid->printableUID.uid; _sourcePages = _rfid->strAllPages;
+
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
             padprintln("Source UID: " + _sourceUID);
             padprintln("");
+#else
+            Serial.println("Source UID: " + _sourceUID);
+            Serial.println("");
+#endif
             break;
+
         case CLONE_MODE:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
             padprintln("New UID: " + _rfid->printableUID.uid);
             padprintln("SAK: " + _rfid->printableUID.sak);
             padprintln("");
+#else
+            Serial.println("New UID: " + _rfid->printableUID.uid);
+            Serial.println("SAK: " + _rfid->printableUID.sak);
+            Serial.println("");
+#endif
             break;
+
         case WRITE_MODE:
-            if (!_rfid->pageReadSuccess) padprintln("[!] Data blocks are incomplete");
+            if (!_rfid->pageReadSuccess) {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+                padprintln("[!] Data blocks are incomplete");
+#else
+                Serial.println("[!] Data blocks are incomplete");
+#endif
+            }
+
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
             padprintln(String(_rfid->dataPages) + " pages of data to write");
             padprintln("");
+#else
+            Serial.println(String(_rfid->dataPages) + " pages of data to write");
+            Serial.println("");
+#endif
             break;
+
         case WRITE_NDEF_MODE: _ndef_created = false; break;
+
         case SAVE_MODE:
         case ERASE_MODE:
         case CUSTOM_UID_MODE: break;
@@ -147,6 +182,7 @@ void TagOMatic::set_state(RFID_State state) {
 }
 
 void TagOMatic::display_banner() {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("TAG-O-MATIC");
 
     switch (current_state) {
@@ -168,9 +204,11 @@ void TagOMatic::display_banner() {
     padprintln("Press [OK] to change mode.");
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     padprintln("");
+#endif
 }
 
 void TagOMatic::dump_card_details() {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     padprintln("Device type: " + _rfid->printableUID.picc_type);
     if (_rfid->printableUID.picc_type != "FeliCa") {
         padprintln("UID: " + _rfid->printableUID.uid);
@@ -183,9 +221,11 @@ void TagOMatic::dump_card_details() {
     }
     if (_rfid->pageReadStatus != RFIDInterface::SUCCESS)
         padprintln("[!] " + _rfid->statusMessage(_rfid->pageReadStatus));
+#endif
 }
 
 void TagOMatic::dump_check_details() {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     padprintln("Source UID: " + _sourceUID);
     padprintln("");
 
@@ -195,6 +235,7 @@ void TagOMatic::dump_check_details() {
 
     if (_rfid->pageReadStatus != RFIDInterface::SUCCESS)
         padprintln("[!] " + _rfid->statusMessage(_rfid->pageReadStatus));
+#endif
 }
 
 void TagOMatic::dump_ndef_details() {
@@ -206,14 +247,18 @@ void TagOMatic::dump_ndef_details() {
         case RFIDInterface::NDEF_TEXT: payload_type = "Text"; break;
     }
 
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     padprintln("Payload type: " + payload_type);
     padprintln("Payload size: " + String(_rfid->ndefMessage.payloadSize) + " bytes");
+#endif
 }
 
 void TagOMatic::dump_scan_results() {
     for (int i = _scanned_tags.size(); i > 0; i--) {
         if (_scanned_tags.size() > SCAN_DUMP_SIZE && i <= _scanned_tags.size() - SCAN_DUMP_SIZE) return;
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
         padprintln(String(i) + ": " + _scanned_tags[i - 1]);
+#endif
     }
 }
 
@@ -231,8 +276,10 @@ void TagOMatic::read_card() {
     Serial.print("Tag read status: ");
     Serial.println(_rfid->statusMessage(_rfid->pageReadStatus));
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     display_banner();
     dump_card_details();
+#endif
 
     _read_uid = true;
     _lastReadTime = millis();
@@ -248,8 +295,10 @@ void TagOMatic::scan_cards() {
         _scanned_tags.push_back(_rfid->printableUID.uid);
     }
 
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
     dump_scan_results();
+#endif
 
     delay(200);
 }
@@ -259,8 +308,10 @@ void TagOMatic::check_card() {
 
     if (_rfid->read() != RFIDInterface::SUCCESS) return;
 
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
     dump_check_details();
+#endif
 
     _lastReadTime = millis();
     delay(500);
@@ -270,11 +321,39 @@ void TagOMatic::clone_card() {
     int result = _rfid->clone();
 
     switch (result) {
-        case RFIDInterface::TAG_NOT_PRESENT: return; break;
-        case RFIDInterface::NOT_IMPLEMENTED: displayError("Not implemented for this module."); break;
-        case RFIDInterface::TAG_NOT_MATCH: displayError("Tag types do not match."); break;
-        case RFIDInterface::SUCCESS: displaySuccess("UID written successfully."); break;
-        default: displayError("Error writing UID to tag."); break;
+        case RFIDInterface::TAG_NOT_PRESENT: return;
+
+        case RFIDInterface::NOT_IMPLEMENTED:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Not implemented for this module.");
+#else
+            Serial.println("ERR: Not implemented for this module.");
+#endif
+            break;
+
+        case RFIDInterface::TAG_NOT_MATCH:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Tag types do not match.");
+#else
+            Serial.println("ERR: Tag types do not match.");
+#endif
+            break;
+
+        case RFIDInterface::SUCCESS:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displaySuccess("UID written successfully.");
+#else
+            Serial.println("OK: UID written successfully.");
+#endif
+            break;
+
+        default:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Error writing UID to tag.");
+#else
+            Serial.println("ERR: Error writing UID to tag.");
+#endif
+            break;
     }
 
     delay(1000);
@@ -291,7 +370,9 @@ void TagOMatic::write_custom_uid() {
     display_banner();
 
     if (custom_uid.length() != _rfid->uid.size * 2) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Invalid UID.");
+#endif
         delay(1000);
         set_state(READ_MODE);
         return;
@@ -312,13 +393,28 @@ void TagOMatic::erase_card() {
     int result = _rfid->erase();
 
     switch (result) {
-        case RFIDInterface::TAG_NOT_PRESENT: return; break;
-        case RFIDInterface::SUCCESS: displaySuccess("Tag erased successfully."); break;
-        default: displayError("Error erasing data from tag."); break;
-    }
+        case RFIDInterface::TAG_NOT_PRESENT: return;
 
-    delay(1000);
-    set_state(READ_MODE);
+        case RFIDInterface::SUCCESS:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displaySuccess("Tag erased successfully.");
+#else
+            Serial.println("Tag erased successfully.");
+#endif
+            break;
+
+        default:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Error erasing data from tag.");
+#else
+            Serial.println("Error erasing data from tag.");
+#endif
+            break;
+    }
+}
+
+delay(1000);
+set_state(READ_MODE);
 }
 
 void TagOMatic::write_data() {
@@ -330,10 +426,31 @@ void TagOMatic::write_data() {
     }
 
     switch (result) {
-        case RFIDInterface::TAG_NOT_PRESENT: return; break;
-        case RFIDInterface::TAG_NOT_MATCH: displayError("Tag types do not match."); break;
-        case RFIDInterface::SUCCESS: displaySuccess("Tag written successfully."); break;
-        default: displayError("Error writing data to tag."); break;
+        case RFIDInterface::TAG_NOT_PRESENT: return;
+
+        case RFIDInterface::TAG_NOT_MATCH:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Tag types do not match.");
+#else
+            Serial.println("ERR: Tag types do not match.");
+#endif
+            break;
+
+        case RFIDInterface::SUCCESS:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displaySuccess("Tag written successfully.");
+#else
+            Serial.println("OK: Tag written successfully.");
+#endif
+            break;
+
+        default:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Error writing data to tag.");
+#else
+            Serial.println("ERR: Error writing data to tag.");
+#endif
+            break;
     }
 
     delay(1000);
@@ -350,10 +467,31 @@ void TagOMatic::write_ndef_data() {
     int result = _rfid->write_ndef();
 
     switch (result) {
-        case RFIDInterface::TAG_NOT_PRESENT: return; break;
-        case RFIDInterface::TAG_NOT_MATCH: displayError("Tag is not MIFARE Ultralight."); break;
-        case RFIDInterface::SUCCESS: displaySuccess("Tag written successfully."); break;
-        default: displayError("Error writing data to tag."); break;
+        case RFIDInterface::TAG_NOT_PRESENT: return;
+
+        case RFIDInterface::TAG_NOT_MATCH:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Tag is not MIFARE Ultralight.");
+#else
+            Serial.println("ERR: Tag is not MIFARE Ultralight.");
+#endif
+            break;
+
+        case RFIDInterface::SUCCESS:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displaySuccess("Tag written successfully.");
+#else
+            Serial.println("OK: Tag written successfully.");
+#endif
+            break;
+
+        default:
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+            displayError("Error writing data to tag.");
+#else
+            Serial.println("ERR: Error writing data to tag.");
+#endif
+            break;
     }
 
     delay(1000);
@@ -361,12 +499,19 @@ void TagOMatic::write_ndef_data() {
 }
 
 void TagOMatic::create_ndef_message() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     options = {
         {"Text", [=]() { create_ndef_text(); }},
         {"URL",  [=]() { create_ndef_url(); } },
     };
 
     loopOptions(options);
+#else
+    Serial.println("Text");
+    create_ndef_text();
+    Serial.println("URL");
+    create_ndef_url();
+#endif
 }
 
 void TagOMatic::create_ndef_text() {
@@ -393,6 +538,7 @@ void TagOMatic::create_ndef_url() {
     String prefix = "";
     byte i;
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     options = {
         {"http://www.",
          [&]() {
@@ -431,6 +577,7 @@ void TagOMatic::create_ndef_url() {
     };
 
     loopOptions(options);
+#endif
 
     _rfid->ndefMessage.payload[0] = uic;
 
@@ -450,10 +597,15 @@ void TagOMatic::load_file() {
     int result = _rfid->load();
 
     if (result == RFIDInterface::SUCCESS) {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         displaySuccess("File loaded.");
+#else
+        Serial.println("File loaded.");
+#endif
         delay(1000);
         _read_uid = true;
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         options = {
             {"Clone UID",  [=]() { set_state(CLONE_MODE); }},
             {"Write data", [=]() { set_state(WRITE_MODE); }},
@@ -461,8 +613,13 @@ void TagOMatic::load_file() {
         };
 
         loopOptions(options);
+#endif
     } else {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Error loading file.");
+#else
+        Serial.println("Error loading file.");
+#endif
         delay(1000);
         set_state(READ_MODE);
     }
@@ -473,15 +630,26 @@ void TagOMatic::save_file() {
     uid_str.replace(" ", "");
     String filename = keyboard(uid_str, 30, "File name:");
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     display_banner();
+#endif
 
     int result = _rfid->save(filename);
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (result == RFIDInterface::SUCCESS) {
         displaySuccess("File saved.");
     } else {
         displayError("Error writing file.");
     }
+#else
+    if (result == RFIDInterface::SUCCESS) {
+        Serial.println("File saved.");
+    } else {
+        Serial.println("Error writing file.");
+    }
+#endif
+
     delay(1000);
     set_state(READ_MODE);
 }
@@ -511,3 +679,4 @@ void TagOMatic::save_scan_result() {
     delay(100);
     return;
 }
+#endif

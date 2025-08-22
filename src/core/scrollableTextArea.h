@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "display.h"
 
 class ScrollableTextArea {
@@ -54,3 +55,4 @@ private:
 
     void update(bool force = false);
 };
+#endif

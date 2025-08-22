@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "OthersMenu.h"
 #include "core/display.h"
 #include "core/utils.h"
@@ -70,3 +71,4 @@ void OthersMenu::drawIcon(float scale) {
         bruceConfig.bgColor
     );
 }
+#endif

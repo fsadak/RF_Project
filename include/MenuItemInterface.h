@@ -1,6 +1,7 @@
 #ifndef __MENU_ITEM_INTERFACE_H__
 #define __MENU_ITEM_INTERFACE_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "core/display.h"
 #include <globals.h>
 
@@ -145,4 +146,5 @@ protected:
     }
 };
 
+#endif
 #endif

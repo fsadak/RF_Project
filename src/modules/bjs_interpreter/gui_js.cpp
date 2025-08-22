@@ -1,3 +1,4 @@
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "gui_js.h"
 #include "core/scrollableTextArea.h"
 
@@ -323,3 +324,4 @@ duk_ret_t native_drawStatusBar(duk_context *ctx) {
 #endif
     return 0;
 }
+#endif

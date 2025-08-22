@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_commands.h"
 #include "cJSON.h"
 #include "core/sd_functions.h"
@@ -5,8 +6,8 @@
 #include "modules/rf/rf_scan.h"
 #include "modules/rf/rf_send.h"
 #include "modules/rf/rf_utils.h"
-#include <globals.h>
 #include <ArduinoJson.h>
+#include <globals.h>
 
 uint32_t rfRxCallback(cmd *c) {
     Command cmd(c);
@@ -19,8 +20,8 @@ uint32_t rfRxCallback(cmd *c) {
     float frequency = strFreq.toFloat();
     frequency /= 1000000; // passed as a long int (e.g. 433920000)
 
-    //Serial.print("frequency: ");
-    //Serial.println(frequency);
+    // Serial.print("frequency: ");
+    // Serial.println(frequency);
 
     String r = "";
     if (raw) {
@@ -52,7 +53,7 @@ uint32_t rfTxCallback(cmd *c) {
     String strFrequency = freqArg.getValue();
     String strTe = teArg.getValue();
     String strCount = cntArg.getValue();
-    
+
     uint64_t key = std::stoull(strKey.c_str(), nullptr, 16);
     unsigned long frequency = std::stoul(strFrequency.c_str());
     unsigned int te = std::stoul(strTe.c_str());
@@ -148,23 +149,23 @@ uint32_t rfSendCallback(cmd *c) {
     Argument args = cmd.getArgument(0);
     String args_str = args.getValue();
     args_str.trim();
-    //Serial.println(command);
-    
+    // Serial.println(command);
+
     JsonDocument jsonDoc;
-    if( deserializeJson(jsonDoc, args_str) ) {
+    if (deserializeJson(jsonDoc, args_str)) {
         Serial.println("Failed to parse json");
         Serial.println(args_str);
         return false;
     }
-    
-    JsonObject args_json = jsonDoc.as<JsonObject>();  // root
+
+    JsonObject args_json = jsonDoc.as<JsonObject>(); // root
 
     unsigned int bits = 32; // defaults to 32 bits
     String dataStr = "";
     int protocol = 1; // defaults to 1
     int pulse = 0;    // 0 leave the library use the default value depending on protocol
     int repeat = 10;
-    
+
     if (args_json["Data"].isNull()) {
         Serial.println("json missing data field");
         return false;
@@ -173,24 +174,20 @@ uint32_t rfSendCallback(cmd *c) {
     }
 
     uint64_t data_int = strtoul(dataStr.c_str(), nullptr, 16);
-    if(data_int==0) {
+    if (data_int == 0) {
         Serial.println("rfSendCallback: invalid data value: 0");
         Serial.println(dataStr);
         return false;
     }
-    
-    if (!args_json["Bits"].isNull())
-        bits = args_json["Bits"].as<unsigned int>();
-        
-    if (!args_json["Pulse"].isNull())
-        pulse = args_json["Pulse"].as<int>();
-        
-    if (!args_json["Protocol"].isNull())
-        protocol = args_json["Protocol"].as<int>();
-        
-    if (!args_json["Repeat"].isNull())
-        repeat = args_json["Repeat"].as<int>();
-    
+
+    if (!args_json["Bits"].isNull()) bits = args_json["Bits"].as<unsigned int>();
+
+    if (!args_json["Pulse"].isNull()) pulse = args_json["Pulse"].as<int>();
+
+    if (!args_json["Protocol"].isNull()) protocol = args_json["Protocol"].as<int>();
+
+    if (!args_json["Repeat"].isNull()) repeat = args_json["Repeat"].as<int>();
+
     if (!initRfModule("tx")) return false;
 
     RCSwitch_send(data_int, bits, pulse, protocol, repeat);
@@ -238,3 +235,4 @@ void createRfCommands(SimpleCLI *cli) {
 
     cli->addSingleArgCmd("RfSend", rfSendCallback);
 }
+#endif

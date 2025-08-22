@@ -8,6 +8,14 @@
 #include <set>
 #include <vector>
 
+#ifndef LH
+#define LH 8
+#endif
+
+#ifndef LW
+#define LW 6
+#endif
+
 enum RFIDModules {
     M5_RFID2_MODULE = 0,
     PN532_I2C_MODULE = 1,
@@ -16,10 +24,12 @@ enum RFIDModules {
     ST25R3916_SPI_MODULE = 4,
 };
 
+#ifdef HAS_RF
 enum RFModules {
     M5_RF_MODULE = 0,
     CC1101_SPI_MODULE = 1,
 };
+#endif
 
 class BruceConfig : public BruceTheme {
 public:
@@ -70,13 +80,15 @@ public:
     uint8_t irTxRepeats = 0;
     int irRx = GROVE_SCL;
 
-    // RF
+// RF
+#ifdef HAS_RF
     int rfTx = GROVE_SDA;
     int rfRx = GROVE_SCL;
     int rfModule = M5_RF_MODULE;
     float rfFreq = 433.92;
     int rfFxdFreq = 1;
     int rfScanRange = 3;
+#endif
 
     // iButton Pin
     int iButton = 0;
@@ -172,7 +184,9 @@ public:
     // RF
     void setRfTxPin(int value);
     void setRfRxPin(int value);
+#ifdef HAS_RF
     void setRfModule(RFModules value);
+#endif
     void validateRfModuleValue();
     void setRfFreq(float value, int fxdFreq = 2);
     void setRfFxdFreq(float value);

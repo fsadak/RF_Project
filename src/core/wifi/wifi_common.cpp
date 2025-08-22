@@ -13,6 +13,7 @@ bool _wifiConnect(const String &ssid, int encryption) {
     bool retry = false;
 
     while (!connected) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         wakeUpScreen();
 
         options = {
@@ -20,6 +21,7 @@ bool _wifiConnect(const String &ssid, int encryption) {
             {"Cancel", [&]() { retry = false; }},
         };
         loopOptions(options);
+        #endif
 
         if (!retry) {
             wifiDisconnect();
@@ -42,29 +44,44 @@ bool _wifiConnect(const String &ssid, int encryption) {
 }
 
 bool _connectToWifiNetwork(const String &ssid, const String &pwd) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("WiFi Connect");
     padprintln("");
     padprint("Connecting to: " + ssid + ".");
+    #else
+    Serial.println("Connecting to: " + ssid + ".");
+    #endif
+
 
     WiFi.begin(ssid, pwd);
 
     int i = 1;
     while (WiFi.status() != WL_CONNECTED) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         if (tft.getCursorX() >= tftWidth - 12) {
             padprintln("");
             padprint("");
         }
-#ifdef HAS_SCREEN
+        #endif
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         tft.print(".");
 #else
         Serial.print(".");
 #endif
 
-        if (i > 20) {
-            displayError("Wifi Offline");
-            vTaskDelay(500 / portTICK_RATE_MS);
-            break;
-        }
+
+            if (i > 20)
+            {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                displayError("Wifi Offline");
+                vTaskDelay(500 / portTICK_RATE_MS);
+                break;
+            #else
+                Serial.println("Wifi Offline");
+                vTaskDelay(500 / portTICK_RATE_MS);
+                break;
+            #endif
+            }
 
         vTaskDelay(500 / portTICK_RATE_MS);
         i++;
@@ -105,51 +122,65 @@ bool wifiConnectMenu(wifi_mode_t mode) {
             WiFi.mode(WIFI_MODE_STA);
             bool refresh_scan = false;
             do {
-                displayTextLine("Scanning..");
                 nets = WiFi.scanNetworks();
-                options = {};
-                for (int i = 0; i < nets; i++) {
-                    if (options.size() < 250) {
-                        String ssid = WiFi.SSID(i);
-                        int encryptionType = WiFi.encryptionType(i);
-                        int32_t rssi = WiFi.RSSI(i);
-                        // Check if the network is secured
-                        String encryptionPrefix = (encryptionType == WIFI_AUTH_OPEN) ? "" : "#";
-                        String encryptionTypeStr;
-                        switch (encryptionType) {
-                            case WIFI_AUTH_OPEN: encryptionTypeStr = "Open"; break;
-                            case WIFI_AUTH_WEP: encryptionTypeStr = "WEP"; break;
-                            case WIFI_AUTH_WPA_PSK: encryptionTypeStr = "WPA/PSK"; break;
-                            case WIFI_AUTH_WPA2_PSK: encryptionTypeStr = "WPA2/PSK"; break;
-                            case WIFI_AUTH_WPA_WPA2_PSK: encryptionTypeStr = "WPA/WPA2/PSK"; break;
-                            case WIFI_AUTH_WPA2_ENTERPRISE: encryptionTypeStr = "WPA2/Enterprise"; break;
-                            default: encryptionTypeStr = "Unknown"; break;
-                        }
-                        String optionText =
-                            encryptionPrefix + ssid + "(" + String(rssi) + "|" + encryptionTypeStr + ")";
-                        options.push_back({optionText.c_str(), [=]() { _wifiConnect(ssid, encryptionType); }}
-                        );
-                    }
-                }
-                options.push_back({"Hidden SSID", [=]() {
-                                       String __ssid = keyboard("", 32, "Your SSID");
-                                       _wifiConnect(__ssid.c_str(), 8);
-                                   }});
-                addOptionToMainMenu();
 
-                loopOptions(options);
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                    displayTextLine("Scanning..");
+                #else
+                    Serial.println("Scanning for WiFi networks...");
+                #endif
+
                 options.clear();
+                for (int i = 0; i < nets; i++) {
+                    String ssid = WiFi.SSID(i);
+                    int encryptionType = WiFi.encryptionType(i);
+                    int32_t rssi = WiFi.RSSI(i);
+
+                    String encryptionPrefix = (encryptionType == WIFI_AUTH_OPEN) ? "" : "#";
+                    String encryptionTypeStr;
+                    switch (encryptionType) {
+                        case WIFI_AUTH_OPEN: encryptionTypeStr = "Open"; break;
+                        case WIFI_AUTH_WEP: encryptionTypeStr = "WEP"; break;
+                        case WIFI_AUTH_WPA_PSK: encryptionTypeStr = "WPA/PSK"; break;
+                        case WIFI_AUTH_WPA2_PSK: encryptionTypeStr = "WPA2/PSK"; break;
+                        case WIFI_AUTH_WPA_WPA2_PSK: encryptionTypeStr = "WPA/WPA2/PSK"; break;
+                        case WIFI_AUTH_WPA2_ENTERPRISE: encryptionTypeStr = "WPA2/Enterprise"; break;
+                        default: encryptionTypeStr = "Unknown"; break;
+                    }
+
+                    String optionText = encryptionPrefix + ssid + "(" + String(rssi) + "|" + encryptionTypeStr + ")";
+
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                        options.push_back({optionText.c_str(), [=]() { _wifiConnect(ssid, encryptionType); }});
+                    #else
+                        Serial.println(optionText);
+                    #endif
+                }
+
+                // Hidden SSID seçeneği
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                    options.push_back({"Hidden SSID", [=]() {
+                                        String __ssid = keyboard("", 32, "Your SSID");
+                                        _wifiConnect(__ssid.c_str(), 8);
+                                    }});
+                    addOptionToMainMenu();
+                    loopOptions(options);
+                    options.clear();
+                #else
+                    Serial.println("Hidden SSID option available via console input.");
+                #endif
 
                 if (check(EscPress)) {
                     refresh_scan = true;
                 } else {
                     refresh_scan = false;
                 }
+
             } while (refresh_scan);
         } break;
 
         case WIFI_AP_STA: // repeater mode
-                          // _setupRepeater();
+            // _setupRepeater();
             break;
 
         default: // error handling
@@ -180,7 +211,9 @@ void wifiConnectTask(void *pvParameters) {
                 wifiConnected = true;
                 wifiIP = WiFi.localIP().toString();
                 updateClockTimezone();
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 drawStatusBar();
+                #endif
                 break;
             }
             vTaskDelay(100 / portTICK_RATE_MS);
@@ -198,7 +231,11 @@ bool wifiConnecttoKnownNet(void) {
     bool result = false;
     int nets;
     WiFi.mode(WIFI_MODE_STA);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayTextLine("Scanning Networks..");
+    #else
+    Serial.println("Scanning for WiFi networks...");
+    #endif
     nets = WiFi.scanNetworks();
     for (int i = 0; i < nets; i++) {
         String ssid = WiFi.SSID(i);

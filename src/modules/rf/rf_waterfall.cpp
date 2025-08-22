@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_waterfall.h"
 #ifndef TFT_MOSI
 #define TFT_MOSI -1
@@ -225,3 +226,4 @@ void rf_waterfall_run() {
     deinitRfModule();
     delay(10);
 }
+#endif

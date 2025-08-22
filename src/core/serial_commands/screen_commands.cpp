@@ -46,8 +46,10 @@ uint32_t rgbColorCallback(cmd *c) {
         return false;
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     uint16_t hexColor = tft.color565(r, g, b);
     bruceConfig.priColor = hexColor; // change global var, dont save in config
+    #endif
     return true;
 }
 

@@ -1,8 +1,11 @@
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "settings.h"
 #include "core/wifi/wifi_common.h"
 #include "display.h"
 #include "modules/others/qrcode_menu.h"
+#ifdef HAS_NO_RF
 #include "modules/rf/rf_utils.h" // for initRfModule
+#endif
 #include "mykeyboard.h"
 #include "powerSave.h"
 #include "sd_functions.h"
@@ -497,6 +500,7 @@ void removeEvilWifiMenu() {
 **  Handles Menu to set the RF module in use
 **********************************************************************/
 void setRFModuleMenu() {
+#ifdef HAS_NO_RF
     int result = 0;
     int idx = 0;
     uint8_t pins_setup = 0;
@@ -562,6 +566,7 @@ void setRFModuleMenu() {
     }
     // fallback to "M5 RF433T/R" on errors
     bruceConfig.setRfModule(M5_RF_MODULE);
+#endif
 }
 
 /*********************************************************************
@@ -569,6 +574,7 @@ void setRFModuleMenu() {
 **  Handles Menu to set the default frequency for the RF module
 **********************************************************************/
 void setRFFreqMenu() {
+#ifdef HAS_NO_RF
     float result = 433.92;
     String freq_str = keyboard(String(bruceConfig.rfFreq), 10, "Default frequency:");
     if (freq_str.length() > 1) {
@@ -582,6 +588,7 @@ void setRFFreqMenu() {
     displayError("Invalid frequency");
     bruceConfig.setRfFreq(433.92); // reset to default
     delay(1000);
+#endif
 }
 
 /*********************************************************************
@@ -895,6 +902,7 @@ int gsetIrRxPin(bool set) {
 **  get or set RF Tx Pin
 **********************************************************************/
 int gsetRfTxPin(bool set) {
+#ifdef HAS_NO_RF
     int result = bruceConfig.rfTx;
 
     if (result > 45) bruceConfig.setRfTxPin(GROVE_SDA);
@@ -923,6 +931,9 @@ int gsetRfTxPin(bool set) {
 
     returnToMenu = true;
     return bruceConfig.rfTx;
+#else
+    return -1;
+#endif
 }
 
 /*********************************************************************
@@ -930,6 +941,7 @@ int gsetRfTxPin(bool set) {
 **  get or set FR Rx Pin
 **********************************************************************/
 int gsetRfRxPin(bool set) {
+#ifdef HAS_NO_RF
     int result = bruceConfig.rfRx;
 
     if (result > 36) bruceConfig.setRfRxPin(GROVE_SCL);
@@ -958,6 +970,9 @@ int gsetRfRxPin(bool set) {
 
     returnToMenu = true;
     return bruceConfig.rfRx;
+#else
+    return -1;
+#endif
 }
 
 /*********************************************************************
@@ -1184,3 +1199,4 @@ void setTheme() {
         bruceConfig.saveFile();
     }
 }
+#endif

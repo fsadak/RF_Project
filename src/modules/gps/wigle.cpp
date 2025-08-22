@@ -18,10 +18,12 @@ Wigle::Wigle() {}
 Wigle::~Wigle() {}
 
 bool Wigle::_check_token() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     if (bruceConfig.wigleBasicToken == "") {
         displayError("Wigle token not found", true);
         return false;
     }
+    #endif
 
     auth_header = "Basic " + bruceConfig.wigleBasicToken;
 
@@ -33,8 +35,10 @@ bool Wigle::_check_token() {
 bool Wigle::get_user() {
     if (!_check_token()) return false;
 
+    #if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
     padprintln("Connecting to Wigle...");
+    #endif
 
     WiFiClientSecure client;
     client.setInsecure();
@@ -72,14 +76,18 @@ bool Wigle::get_user() {
 }
 
 void Wigle::display_banner() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("Wigle Upload");
     padprintln("\n");
+    #endif
 }
 
 void Wigle::dump_wigle_info() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     display_banner();
     padprintln("Logged into Wigle as " + wigle_user);
     padprintln("");
+    #endif
 }
 
 void Wigle::send_upload_headers(WiFiClientSecure &client, String filename, int filesize, String boundary) {
@@ -117,20 +125,26 @@ bool Wigle::upload(FS *fs, String filepath, bool auto_delete) {
 
     File file = fs->open(filepath);
     if (!file) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Failed to open Wigle file", true);
+        #endif
         return false;
     }
 
     if (!_upload_file(file, "Uploading...")) {
         file.close();
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("File upload error", true);
+        #endif
         return false;
     }
 
     file.close();
     if (auto_delete) fs->remove(filepath);
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displaySuccess("File upload success", true);
+    #endif
     return true;
 }
 
@@ -161,7 +175,9 @@ bool Wigle::upload_all(FS *fs, String folder, bool auto_delete) {
 
             if (!_upload_file(file, "Uploading " + String(i) + "...")) {
                 file.close();
+                #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                 displayError("File upload error", true);
+                #endif
                 return false;
             }
             i++;
@@ -172,7 +188,9 @@ bool Wigle::upload_all(FS *fs, String folder, bool auto_delete) {
     }
 
     String plural = i > 2 ? "s" : "";
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displaySuccess(String(i - 1) + " file" + plural + " uploaded", true);
+    #endif
     return true;
 }
 
@@ -180,7 +198,9 @@ bool Wigle::_upload_file(File file, String upload_message) {
     WiFiClientSecure client;
     client.setInsecure();
     if (!client.connect(host, 443)) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Wigle API connection failed", true);
+        #endif
         return false;
     }
 
@@ -200,7 +220,9 @@ bool Wigle::_upload_file(File file, String upload_message) {
         file.read(cbuf, toread);
         client.write(cbuf, toread);
         percent = ((float)file.position() / (float)file.size()) * 100;
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         progressHandler(percent, 100, upload_message);
+        #endif
     }
 
     client.println();

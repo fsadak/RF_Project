@@ -30,6 +30,7 @@ void addOptionToMainMenu() {
 }
 
 void updateClockTimezone() {
+#if defined(HAS_RTC)
     timeClient.begin();
     timeClient.update();
 
@@ -37,7 +38,7 @@ void updateClockTimezone() {
 
     localTime = myTZ.toLocal(timeClient.getEpochTime());
 
-#if !defined(HAS_RTC)
+
     rtc.setTime(timeClient.getEpochTime());
     updateTimeStr(rtc.getTimeStruct());
     clock_set = true;
@@ -50,6 +51,7 @@ void updateTimeStr(struct tm timeInfo) {
 }
 
 void showDeviceInfo() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     ScrollableTextArea area = ScrollableTextArea("DEVICE INFO");
 
     area.addLine("Bruce Version: " + String(BRUCE_VERSION));
@@ -65,6 +67,7 @@ void showDeviceInfo() {
     area.addLine("LittleFS free: " + String(LittleFS.totalBytes() - LittleFS.usedBytes()));
     area.addLine("MAC addr: " + String(WiFi.macAddress()));
     area.addLine("");
+    #endif
 
 #ifdef HAS_SCREEN
     area.addLine("[SCREEN]");
@@ -75,6 +78,7 @@ void showDeviceInfo() {
     area.addLine("");
 #endif
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     area.addLine("[GPIO]");
     area.addLine("GROVE_SDA: " + String(GROVE_SDA));
     area.addLine("GROVE_SCL: " + String(GROVE_SCL));
@@ -90,7 +94,9 @@ void showDeviceInfo() {
 
     area.addLine("[BAT]");
     area.addLine("Charge: " + String(getBattery()) + "%");
+    #endif
 #ifdef USE_BQ27220_VIA_I2C
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     area.addLine("BQ27220 ADDR: " + String(BQ27220_I2C_ADDRESS));
     area.addLine("Curr Capacity: " + String(bq.getRemainCap()) + "mAh");
     area.addLine("Full Capacity: " + String(bq.getFullChargeCap()) + "mAh");
@@ -111,9 +117,12 @@ void showDeviceInfo() {
     area.addLine("Curr Current: " + String(bq.getCurr(CURR_INSTANT)) + "mA");
     area.addLine("Avg Current: " + String(bq.getCurr(CURR_MODE::CURR_AVERAGE)) + "mA");
     area.addLine("Raw Current: " + String(bq.getCurr(CURR_MODE::CURR_RAW)) + "mA");
+    #endif
 #endif
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     area.show();
+    #endif
 }
 
 #if defined(HAS_TOUCH)
@@ -151,6 +160,7 @@ void touchHeatMap(struct TouchPoint t) {
 #endif
 
 String getOptionsJSON() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     String menutype = "regular_menu";
     if (menuOptionType == 0) menutype = "main_menu";
     else if (menuOptionType == 1) menutype = "sub_menu";
@@ -168,4 +178,7 @@ String getOptionsJSON() {
     }
     response += "], \"active\":" + String(sel) + "}";
     return response;
+    #else
+    return "";
+    #endif
 }

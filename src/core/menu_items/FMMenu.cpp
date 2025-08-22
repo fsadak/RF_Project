@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "FMMenu.h"
 #include "core/display.h"
 #include "core/utils.h"
@@ -58,3 +59,4 @@ void FMMenu::drawIcon(float scale) {
     tft.fillCircle(caseX + iconW / 10 + iconH / 8, btnY, iconH / 12, bruceConfig.priColor);
     tft.fillCircle(caseX + iconW / 10 + iconW / 2 - iconH / 8, btnY, iconH / 12, bruceConfig.priColor);
 }
+#endif

@@ -13,7 +13,9 @@
 #include "modules/gps/gps_tracker.h"
 #include "modules/gps/wardriving.h"
 #include "modules/pwnagotchi/pwnagotchi.h"
+#ifdef HAS_RF
 #include "modules/rf/rf_send.h"
+#endif
 #include "modules/rfid/PN532KillerTools.h"
 #include "modules/rfid/pn532ble.h"
 #ifdef ARDUINO_USB_MODE
@@ -24,16 +26,24 @@ StartupApp::StartupApp() {
 #ifndef LITE_VERSION
     _startupApps["Brucegotchi"] = []() { brucegotchi_start(); };
 #endif
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     _startupApps["Clock"] = []() { runClockLoop(); };
+#endif
+#ifdef HAS_RF
     _startupApps["Custom SubGHz"] = []() { sendCustomRF(); };
+#endif
     _startupApps["GPS Tracker"] = []() { GPSTracker(); };
 #if defined(ARDUINO_USB_MODE) && !defined(USE_SD_MMC)
     _startupApps["Mass Storage"] = []() { MassStorage(); };
 #endif
     _startupApps["Wardriving"] = []() { Wardriving(); };
     _startupApps["WebUI"] = []() { startWebUi(); };
+    #if defined(HAS_PN532_BLE) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     _startupApps["PN532 BLE"] = []() { Pn532ble(); };
+    #endif
+    #if defined(HAS_PN532_KILLER)
     _startupApps["PN532Killer"] = []() { PN532KillerTools(); };
+    #endif
 }
 
 bool StartupApp::startApp(const String &appName) const {
@@ -43,10 +53,12 @@ bool StartupApp::startApp(const String &appName) const {
         return false;
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     it->second();
 
     delay(200);
     tft.fillScreen(bruceConfig.bgColor);
+    #endif
 
     return true;
 }

@@ -1,3 +1,4 @@
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
 /*
 Thanks to thoses developers for their projects:
 * @7h30th3r0n3 : https://github.com/7h30th3r0n3/Evil-M5Core2 and https://github.com/7h30th3r0n3/PwnGridSpam
@@ -369,3 +370,4 @@ void send_pwnagotchi_beacon_main() {
     // Display the spam status and wait for user input
     displaySpamStatus();
 }
+#endif

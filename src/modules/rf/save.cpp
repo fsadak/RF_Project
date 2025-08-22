@@ -1,9 +1,12 @@
 #include "save.h"
+#include "../../core/sd_functions.h"
 
 bool rf_raw_save(RawRecording recorded) {
     FS *fs = nullptr;
     if (!getFsStorage(fs) || fs == nullptr) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("No space left on device", true);
+        #endif
         return false;
     }
 
@@ -12,7 +15,9 @@ bool rf_raw_save(RawRecording recorded) {
 
     if (!fs->exists("/BruceRF")) {
         if (!fs->mkdir("/BruceRF")) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
             displayError("Error creating directory", true);
+#endif
             return false;
         }
     }
@@ -21,7 +26,9 @@ bool rf_raw_save(RawRecording recorded) {
 
     File file = fs->open(filename, FILE_WRITE, true);
     if (!file) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Error creating file", true);
+#endif
         return false;
     }
 
@@ -71,6 +78,8 @@ bool rf_raw_save(RawRecording recorded) {
     }
 
     file.close();
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displaySuccess(filename, true);
+#endif
     return true;
 }

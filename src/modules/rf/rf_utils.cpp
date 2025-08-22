@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_utils.h"
 #include "core/settings.h"
 
@@ -178,9 +179,9 @@ bool initRfModule(String mode, float frequency) {
         cc1101_spi_ready = true;
     } else {
         // single-pinned module
-        if (abs(frequency - bruceConfig.rfFreq)>1) {
+        if (abs(frequency - bruceConfig.rfFreq) > 1) {
             Serial.print("warn: unsupported frequency, trying anyway...");
-            //return false;
+            // return false;
         }
 
         if (mode == "tx") {
@@ -372,3 +373,4 @@ struct RfCodes selectRecentRfMenu() {
 
     return selected_code;
 }
+#endif

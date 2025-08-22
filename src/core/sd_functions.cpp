@@ -1,5 +1,7 @@
 #include "sd_functions.h"
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "display.h" // using displayRedStripe as error msg
+#endif
 #include "modules/badusb_ble/ducky_typer.h"
 #include "modules/bjs_interpreter/interpreter.h"
 #include "modules/gps/wigle.h"
@@ -7,10 +9,14 @@
 #include "modules/ir/custom_ir.h"
 #include "modules/others/audio.h"
 #include "modules/others/qrcode_menu.h"
+#if defined(HAS_RF)
 #include "modules/rf/rf_send.h"
+#endif
 #include "mykeyboard.h" // using keyboard when calling rename
 #include "passwords.h"
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "scrollableTextArea.h"
+#endif
 #include <globals.h>
 
 #include <MD5Builder.h>
@@ -199,7 +205,9 @@ bool copyToFs(FS from, FS to, String path, bool draw) {
     int prog = 0;
 
     if (&to == &LittleFS && (LittleFS.totalBytes() - LittleFS.usedBytes()) < tot) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Not enought space", true);
+        #endif
         return false;
     }
     const int bufSize = 1024;
@@ -215,6 +223,7 @@ bool copyToFs(FS from, FS to, String path, bool draw) {
         } else {
             prog += bytesRead;
             float rad = 360 * prog / tot;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             if (draw)
                 tft.drawArc(
                     tftWidth / 2,
@@ -227,11 +236,14 @@ bool copyToFs(FS from, FS to, String path, bool draw) {
                     bruceConfig.bgColor,
                     true
                 );
+                #endif
         }
     }
     if (prog == tot) result = true;
     else {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Fail Copying File", true);
+        #endif
         return false;
     }
 
@@ -249,7 +261,9 @@ bool copyFile(FS fs, String path) {
         file.close();
         return true;
     } else {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayRedStripe("Cannot copy Folder");
+        #endif
         file.close();
         return false;
     }
@@ -293,6 +307,7 @@ bool pasteFile(FS fs, String path) {
         } else {
             prog += bytesRead;
             float rad = 360 * prog / tot;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.drawArc(
                 tftWidth / 2,
                 tftHeight / 2,
@@ -304,6 +319,7 @@ bool pasteFile(FS fs, String path) {
                 bruceConfig.bgColor,
                 true
             );
+            #endif
             // tft.fillRect(7,tftHeight-10, (tftWidth-14)*prog/tot, 5, bruceConfig.priColor);
         }
     }
@@ -321,7 +337,9 @@ bool pasteFile(FS fs, String path) {
 bool createFolder(FS fs, String path) {
     String foldername = keyboard("", 76, "Folder Name: ");
     if (!fs.mkdir(path + "/" + foldername)) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayRedStripe("Couldn't create folder");
+        #endif
         return false;
     }
     return true;
@@ -357,7 +375,9 @@ String readSmallFile(FS &fs, String filepath) {
 
     size_t fileSize = file.size();
     if (fileSize > SAFE_STACK_BUFFER_SIZE || fileSize > ESP.getFreeHeap()) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("File is too big", true);
+        #endif
         return "";
     }
     // TODO: if(psramFound()) -> use PSRAM instead
@@ -540,21 +560,27 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
         }
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     Opt_Coord coord;
     String result = "";
     const short PAGE_JUMP_SIZE = (tftHeight - 20) / (LH * FM);
+    #endif
     bool reload = false;
     bool redraw = true;
     int index = 0;
     int maxFiles = 0;
     String Folder = rootPath;
     String PreFolder = rootPath;
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.drawPixel(0, 0, 0);
     tft.fillScreen(bruceConfig.bgColor); // TODO: Does only the T-Embed CC1101 need this?
     tft.drawRoundRect(5, 5, tftWidth - 10, tftHeight - 10, 5, bruceConfig.priColor);
+    #endif
     if (&fs == &SD) {
         if (!setupSdCard()) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayError("Fail Mounting SD", true);
+            #endif
             return "";
         }
     }
@@ -566,6 +592,7 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
     maxFiles = fileList.size() - 1; // discount the >back operator
     LongPress = false;
     unsigned long LongPressTmp = millis();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     while (1) {
         delay(10);
         // if(returnToMenu) break; // stop this loop and retur to the previous loop
@@ -625,24 +652,32 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
         if (check(PrevPress) || check(UpPress)) {
             if (index == 0) index = maxFiles;
             else if (index > 0) index--;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             redraw = true;
+            #endif
         }
         /* DW Btn to next item */
         if (check(NextPress) || check(DownPress)) {
             if (index == maxFiles) index = 0;
             else index++;
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             redraw = true;
+            #endif
         }
         if (check(NextPagePress)) {
             index += PAGE_JUMP_SIZE;
             if (index > maxFiles) index = maxFiles - 1; // check bounds
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             redraw = true;
+            #endif
             continue;
         }
         if (check(PrevPagePress)) {
             index -= PAGE_JUMP_SIZE;
             if (index < 0) index = 0; // check bounds
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             redraw = true;
+            #endif
             continue;
         }
         /* Select to install */
@@ -666,10 +701,12 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                         {"Close Menu", [&]() { yield(); }                                                  },
                         {"Main Menu",  [&]() { exit = true; }                                              },
                     };
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     loopOptions(options);
                     tft.drawRoundRect(5, 5, tftWidth - 10, tftHeight - 10, 5, bruceConfig.priColor);
                     reload = true;
                     redraw = true;
+                    #endif
                 } else if (fileList[index].folder == false && fileList[index].operation == false) {
                     goto Files;
                 } else {
@@ -677,12 +714,14 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                         {"New Folder", [=]() { createFolder(fs, Folder); }},
                     };
                     if (fileToCopy != "") options.push_back({"Paste", [=]() { pasteFile(fs, Folder); }});
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     options.push_back({"Close Menu", [&]() { yield(); }});
                     options.push_back({"Main Menu", [&]() { exit = true; }});
                     loopOptions(options);
                     tft.drawRoundRect(5, 5, tftWidth - 10, tftHeight - 10, 5, bruceConfig.priColor);
                     reload = true;
                     redraw = true;
+                    #endif
                 }
             } else {
             Files:
@@ -691,7 +730,9 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                              fileList[index].filename; // Folder=="/"? "":"/" +
                     // Debug viewer
                     Serial.println(Folder);
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     redraw = true;
+                    #endif
                 } else if (fileList[index].folder == false && fileList[index].operation == false) {
                     // Save the file/folder info to Clear memory to allow other functions to work better
                     String filepath = Folder + (Folder == "/" ? "" : "/") + fileList[index].filename; //
@@ -700,6 +741,7 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                     Serial.println(filepath + " --> " + filename);
                     fileList.clear(); // Clear memory to allow other functions to work better
 
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     options = {
                         {"View File",  [=]() { viewFile(fs, filepath); }            },
                         {"File Info",  [=]() { fileInfo(fs, filepath); }            },
@@ -713,8 +755,10 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                         options.push_back({"Copy->LittleFS", [=]() { copyToFs(SD, LittleFS, filepath); }});
                     if (&fs == &LittleFS && sdcardMounted)
                         options.push_back({"Copy->SD", [=]() { copyToFs(LittleFS, SD, filepath); }});
+                        #endif
 
-                    // custom file formats commands added in front
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                        // custom file formats commands added in front
                     if (filepath.endsWith(".jpg") || filepath.endsWith(".gif") || filepath.endsWith(".bmp") ||
                         filepath.endsWith(".png"))
                         options.insert(options.begin(), {"View Image", [&]() {
@@ -723,17 +767,26 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                                                              while (!check(AnyKeyPress))
                                                                  vTaskDelay(10 / portTICK_PERIOD_MS);
                                                          }});
+                    #endif
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".ir"))
                         options.insert(options.begin(), {"IR Tx SpamAll", [&]() {
                                                              delay(200);
                                                              txIrFile(&fs, filepath);
                                                          }});
+                    #endif
+
+#ifdef HAS_RF
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".sub"))
                         options.insert(options.begin(), {"Subghz Tx", [&]() {
                                                              delay(200);
                                                              txSubFile(&fs, filepath);
                                                          }});
-                    if (filepath.endsWith(".csv")) {
+                    #endif
+#endif
+                        #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                        if (filepath.endsWith(".csv")) {
                         options.insert(options.begin(), {"Wigle Upload", [&]() {
                                                              delay(200);
                                                              Wigle wigle;
@@ -744,15 +797,21 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                                                              Wigle wigle;
                                                              wigle.upload_all(&fs, Folder);
                                                          }});
+
                     }
+                    #endif
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".bjs") || filepath.endsWith(".js")) {
                         options.insert(options.begin(), {"JS Script Run", [&]() {
                                                              delay(200);
                                                              run_bjs_script_headless(fs, filepath);
                                                              exit = true;
                                                          }});
+
                     }
+                    #endif
 #if defined(USB_as_HID)
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".txt")) {
                         options.push_back({"BadUSB Run", [&]() {
                                                ducky_startKb(hid_usb, KeyboardLayout_en_US, false);
@@ -767,48 +826,54 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                                                key_input_from_string(t);
                                            }});
                     }
+                    #endif
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".enc")) { // encrypted files
                         options.insert(
-                            options.begin(),
-                            {"Decrypt+Type",
-                             [&]() {
-                                 String plaintext = readDecryptedFile(fs, filepath);
-                                 if (plaintext.length() == 0)
-                                     return displayError(
-                                         "Decryption failed", true
-                                     ); // file is too big or cannot read, or cancelled
-                                 // else
-                                 plaintext.trim(); // remove newlines
-                                 key_input_from_string(plaintext);
-                             }}
+                            options.begin(), {"Decrypt+Type", [&]() {
+                                                  String plaintext = readDecryptedFile(fs, filepath);
+                                                  if (plaintext.length() == 0)
+                                                      return displayError(
+                                                          "Decryption failed", true
+                                                      ); // file is too big or cannot read, or cancelled
+                                                  // else
+                                                  plaintext.trim(); // remove newlines
+                                                  key_input_from_string(plaintext);
+                                              }}
                         );
                     }
+                    #endif
 #endif
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     if (filepath.endsWith(".enc")) { // encrypted files
-                        options.insert(options.begin(), {"Decrypt+Show", [&]() {
-                                                             String plaintext =
-                                                                 readDecryptedFile(fs, filepath);
-                                                             delay(200);
-                                                             if (plaintext.length() == 0)
-                                                                 return displayError(
-                                                                     "Decryption failed", true
-                                                                 );
-                                                             plaintext.trim(); // remove newlines
-                                                                               // if(plaintext.length()<..)
-                                                             displaySuccess(plaintext, true);
-                                                             // else
-                                                             // TODO: show in the text viewer
-                                                         }});
+                        options.insert(
+                            options.begin(), {"Decrypt+Show", [&]() {
+                                                  String plaintext = readDecryptedFile(fs, filepath);
+                                                  delay(200);
+                                                  if (plaintext.length() == 0)
+                                                      return displayError("Decryption failed", true);
+                                                  plaintext.trim(); // remove newlines
+                                                                    // if(plaintext.length()<..)
+                                                  displaySuccess(plaintext, true);
+                                                  // else
+                                                  // TODO: show in the text viewer
+                                              }}
+                        );
                     }
+                    #endif
 #if defined(HAS_NS4168_SPKR)
                     if (isAudioFile(filepath))
-                        options.insert(options.begin(), {"Play Audio", [&]() {
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+                    options.insert(options.begin(), {"Play Audio", [&]() {
                                                              delay(200);
                                                              Serial.println(check(AnyKeyPress));
                                                              delay(200);
                                                              playAudioFile(&fs, filepath);
                                                          }});
+                    #endif
 #endif
+
+                    #if defined(HAS_TFT) || defined(HAS_SCREEN)
                     // generate qr codes from small files (<3K)
                     size_t filesize = getFileSize(fs, filepath);
                     // Serial.println(filesize);
@@ -836,6 +901,7 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                     tft.drawRoundRect(5, 5, tftWidth - 10, tftHeight - 10, 5, bruceConfig.priColor);
                     reload = true;
                     redraw = true;
+                    #endif
                 } else {
                 BACK_FOLDER:
                     if (Folder == "/") break;
@@ -845,14 +911,19 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
                     index = 0;
                     redraw = true;
                 }
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 redraw = true;
+                #endif
             }
         WAITING:
             delay(10);
         }
     }
+    #endif
     fileList.clear();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     return result;
+    #endif
 }
 
 /*********************************************************************
@@ -860,6 +931,7 @@ String loopSD(FS &fs, bool filePicker, String allowed_ext, String rootPath) {
 **  Display file content
 **********************************************************************/
 void viewFile(FS fs, String filepath) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     File file = fs.open(filepath, FILE_READ);
     if (!file) return;
 
@@ -869,6 +941,7 @@ void viewFile(FS fs, String filepath) {
     file.close();
 
     area.show();
+    #endif
 }
 
 /*********************************************************************
@@ -877,7 +950,9 @@ void viewFile(FS fs, String filepath) {
 **********************************************************************/
 bool checkLittleFsSize() {
     if ((LittleFS.totalBytes() - LittleFS.usedBytes()) < 4096) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("LittleFS is Full", true);
+        #endif
         return false;
     } else return true;
 }
@@ -923,6 +998,7 @@ void fileInfo(FS fs, String filepath) {
         unit = "kB";
     }
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("FILE INFO");
     padprintln("");
     padprintln("Path: " + filepath);
@@ -932,6 +1008,7 @@ void fileInfo(FS fs, String filepath) {
     padprintf("Size: %.02f %s\n", filesize, unit.c_str());
     padprintln("");
     padprintf("Modified: %s\n", ctime(&modifiedTime));
+    #endif
 
     file.close();
     delay(100);

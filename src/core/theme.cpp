@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "theme.h"
 #include "display.h"
 
@@ -103,3 +104,4 @@ void BruceTheme::_setUiColor(uint16_t primary, uint16_t *secondary, uint16_t *ba
     secColor = secondary == nullptr ? primary - 0x2000 : *secondary;
     bgColor = background == nullptr ? 0x0 : *background;
 }
+#endif

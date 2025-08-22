@@ -1,3 +1,4 @@
+#if defined(HAS_FM) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "fm.h"
 #include "core/utils.h"
 
@@ -303,3 +304,4 @@ void fm_stop() {
         is_running = false;
     }
 }
+#endif

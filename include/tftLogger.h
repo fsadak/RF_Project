@@ -1,5 +1,6 @@
 #ifndef __DISPLAY_LOGER
 #define __DISPLAY_LOGER
+#if (defined(HAS_BRUCE_TFT) || defined(HAS_SCREEN))
 #include <precompiler_flags.h> //need to fetch the device Settings that are not in platformio.ini file
 #include <vector>
 #ifdef HAS_SCREEN
@@ -130,3 +131,4 @@ protected:
 };
 
 #endif //__DISPLAY_LOGER
+#endif

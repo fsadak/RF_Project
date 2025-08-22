@@ -1,18 +1,20 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "core/serialcmds.h"
 #include "sd_functions.h" // to catch FileList Struct
 #include <FS.h>
 #include <LittleFS.h>
 #include <SD.h>
 #include <globals.h>
+#endif
 #define BORDER_PAD_X 10
 #define BORDER_PAD_Y 28
 #define MENU_TYPE_MAIN 0
 #define MENU_TYPE_SUBMENU 1
 #define MENU_TYPE_REGULAR 2
-
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 void panelSleep(bool on);
 void turnOffDisplay();
 bool wakeUpScreen();
@@ -471,5 +473,6 @@ PROGMEM const unsigned char bits[] = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x1F,
 };
 
+#endif
 #endif
 #endif

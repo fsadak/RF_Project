@@ -91,6 +91,7 @@ void read_and_parse_file() {
     }
 
     File file = SD.open("/wg.conf");
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!file) {
         tft.fillScreen(bruceConfig.bgColor);
         tft.setCursor(0, 0);
@@ -103,6 +104,7 @@ void read_and_parse_file() {
         delay(6000);
         return;
     }
+    #endif
 
     Serial.println("Readed config file!");
 
@@ -121,8 +123,10 @@ void wg_setup() {
 
     Serial.println("Adjusting system time...");
     configTime(9 * 60 * 60, 0, "ntp.jst.mfeed.ad.jp", "ntp.nict.jp");
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     tft.setCursor(0, 0);
+    #endif
 
     Serial.println("Connected. Initializing WireGuard...");
     // tft.println("Connecting to\nwireguard...");
@@ -133,6 +137,7 @@ void wg_setup() {
     Serial.println(public_key);
     Serial.println(endpoint_port);
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     tft.setCursor(0, 0);
     tft.setTextSize(FG);
@@ -144,8 +149,12 @@ void wg_setup() {
     tft.setTextColor(TFT_WHITE, bruceConfig.bgColor);
     tft.println(local_ip);
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+    #endif
     Serial.println(local_ip);
     delay(7000);
     isConnectedWireguard = true;
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
+    #endif
+
 }

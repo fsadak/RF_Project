@@ -1,3 +1,4 @@
+#if defined(HAS_IR)
 /**
  * @file ir_read.cpp
  * @author @im.nix (https://github.com/Niximkk)
@@ -7,6 +8,7 @@
  * @date 2024-08-03
  */
 
+#include "Arduino.h"
 #include "ir_read.h"
 #include "core/display.h"
 #include "core/mykeyboard.h"
@@ -58,11 +60,10 @@ bool quickloop = false;
 
 void IrRead::setup() {
     irrecv.enableIRIn();
-    
- 
-    #ifdef USE_BQ25896  ///ENABLE 5V OUTPUT
+
+#ifdef USE_BQ25896 /// ENABLE 5V OUTPUT
     PPM.enableOTG();
-    #endif
+#endif
     // Checks if irRx pin is properly set
     const std::vector<std::pair<String, int>> pins = IR_RX_PINS;
     int count = 0;
@@ -81,15 +82,14 @@ void IrRead::setup() {
              quickButtons = quickButtonsTV;
              begin();
              return loop();
-         }},
+         }                 },
         {"AC",
          [&]() {
              quickButtons = quickButtonsAC;
              begin();
              return loop();
-         }},
-        {"SOUND",
-         [&]() {
+         }                 },
+        {"SOUND", [&]() {
              quickButtons = quickButtonsSOUND;
              begin();
              return loop();
@@ -118,9 +118,9 @@ void IrRead::loop() {
             button_pos = 0;
             quickloop = false;
 
-             #ifdef USE_BQ25896  ///DISABLE 5V OUTPUT
-  PPM.disableOTG();
-  #endif
+#ifdef USE_BQ25896 /// DISABLE 5V OUTPUT
+            PPM.disableOTG();
+#endif
             break;
         }
         if (check(NextPress)) save_signal();
@@ -135,37 +135,61 @@ void IrRead::loop() {
 void IrRead::begin() {
     _read_signal = false;
 
-    display_banner();
+    // Ekran varsa banner göster
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+        display_banner();
+    #endif
+
+    // Mesajı hazırla
+    String msg;
     if (quickloop) {
-        padprintln("Waiting for signal of button: " + String(quickButtons[button_pos]));
+        msg = "Waiting for signal of button: " + String(quickButtons[button_pos]);
     } else {
-        padprintln("Waiting for signal...");
+        msg = "Waiting for signal...";
     }
 
-    tft.println("");
-    display_btn_options();
+    // Mesajı uygun yere yaz
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+        padprintln(msg);
+        tft.println("");
+        display_btn_options();
+    #else
+        Serial.println(msg);
+    #endif
 
-    delay(300);
+    delay(300);  // Bruce’un nefes alması için kısa bir ara
 }
 
+
 void IrRead::cls() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorder();
     tft.setCursor(10, 28);
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
+#endif
 }
 
 void IrRead::display_banner() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     cls();
     tft.setTextSize(FM);
     padprintln("IR Read");
+    #else
+    Serial.println("IR Read");
+    #endif
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextSize(FP);
     padprintln("--------------");
     padprintln("Signals captured: " + String(signals_read));
     tft.println("");
+    #else
+    Serial.println("Signals captured: " + String(signals_read));
+    #endif
 }
 
 void IrRead::display_btn_options() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.println("");
     tft.println("");
     if (_read_signal) {
@@ -174,6 +198,7 @@ void IrRead::display_btn_options() {
     }
     if (signals_read > 0) { padprintln("Press [OK]   to save device"); }
     padprintln("Press [ESC]  to exit");
+#endif
 }
 
 void IrRead::read_signal() {
@@ -183,17 +208,19 @@ void IrRead::read_signal() {
 
     // Always switches to RAW data, regardless of the decoding result
     raw = true;
-
-    display_banner();
-
-    // Dump of signal details
-    padprint("RAW Data Captured:");
     String raw_signal = parse_raw_signal();
+
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+    display_banner();
+    padprint("RAW Data Captured:");
     tft.println(
         raw_signal.substring(0, 45) + (raw_signal.length() > 45 ? "..." : "")
     ); // Shows the RAW signal on the display
-
     display_btn_options();
+    #else
+    Serial.println("RAW Data Captured:");
+    Serial.println(raw_signal.substring(0, 45) + (raw_signal.length() > 45 ? "..." : ""));
+    #endif
     delay(500);
 }
 
@@ -339,6 +366,7 @@ void IrRead::save_device() {
     bool sdCardAvailable = setupSdCard();
     bool littleFsAvailable = checkLittleFsSize();
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (sdCardAvailable && littleFsAvailable) {
         // ask to choose one
         options = {
@@ -358,6 +386,16 @@ void IrRead::save_device() {
         signals_read = 0;
         strDeviceContent = "";
     } else displayError(fs ? "Error writing file." : "No storage available.", true);
+    #else
+        if (sdCardAvailable) {fs = &SD;}
+        else if (littleFsAvailable) {fs = &LittleFS;};
+        if (fs && write_file(filename, fs)) {
+        Serial.println("File saved to " + String((fs == &SD) ? "SD Card" : "LittleFS") + ".", true);
+        signals_read = 0;
+        strDeviceContent = "";
+    } else Serial.println(fs ? "Error writing file." : "No storage available.", true);
+#endif
+
 
     delay(1000);
 
@@ -384,7 +422,10 @@ String IrRead::loop_headless(int max_loops) {
         return "";
     }
 
-    if (results.overflow) displayWarning("buffer overflow, data may be truncated", true);
+#if defined(HAS_TFT) || defined(HAS_SCREEN) i
+    f(results.overflow) displayWarning("buffer overflow, data may be truncated", true);
+#endif
+
     // TODO: check results.repeat
 
     String r = "Filetype: IR signals file\n";
@@ -408,10 +449,13 @@ bool IrRead::write_file(String filename, FS *fs) {
         int ch = 1;
         int i = 1;
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayWarning("File \"" + String(filename) + "\" already exists", true);
         display_banner();
+#endif
 
-        // ask to choose one
+// ask to choose one
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         options = {
             {"Append number", [&]() { ch = 1; }},
             {"Overwrite ",    [&]() { ch = 2; }},
@@ -419,6 +463,7 @@ bool IrRead::write_file(String filename, FS *fs) {
         };
 
         loopOptions(options);
+#endif
 
         switch (ch) {
             case 1:
@@ -429,7 +474,9 @@ bool IrRead::write_file(String filename, FS *fs) {
             case 2: (*fs).remove("/BruceIR/" + filename + ".ir"); break;
             case 3:
                 filename = keyboard(filename, 30, "File name:");
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 display_banner();
+                #endif
                 break;
         }
     }
@@ -459,3 +506,4 @@ bool IrRead::write_file(String filename, FS *fs) {
     delay(100);
     return true;
 }
+#endif

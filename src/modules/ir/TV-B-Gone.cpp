@@ -1,3 +1,4 @@
+#if defined(HAS_TV_BGONE) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 /*
 Last Updated: 30 Mar. 2018
 By Anton Grimpelhuber (anton.grimpelhuber@gmail.com)
@@ -198,9 +199,10 @@ void StartTvBGone() {
 
         // turnoff LED
         digitalWrite(bruceConfig.irTx, LED_OFF);
-           
+
       #ifdef USE_BQ25896  ///DISABLE 5V OUTPUT
       PPM.disableOTG();
       #endif
     }
 } // end of sendAllCodes
+#endif

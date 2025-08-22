@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "main_menu.h"
 #include "display.h"
 #include "utils.h"
@@ -94,3 +95,4 @@ RESTART: // using gotos to avoid stackoverflow after many choices
     bruceConfig.saveFile();
     if (!returnToMenu) goto RESTART;
 }
+#endif

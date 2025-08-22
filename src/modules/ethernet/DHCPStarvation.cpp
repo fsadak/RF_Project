@@ -42,12 +42,15 @@ DHCPStarvation::DHCPStarvation() {
 DHCPStarvation::~DHCPStarvation() { pbuf_free(p); }
 
 void DHCPStarvation::show_gui() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("DHCP Starvation");
 
     displayTextLine("Press prev to stop");
+    #endif
 }
 
 void DHCPStarvation::loop() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     while (true) {
         send_DHCP_packet();
         if (PrevPress) {
@@ -77,6 +80,7 @@ void DHCPStarvation::loop() {
             check(PrevPress);
         }
     }
+    #endif
 }
 
 void DHCPStarvation::prepare_ethernet_hdr() {
@@ -161,15 +165,19 @@ void DHCPStarvation::randomize_mac() {
 void DHCPStarvation::setup() {
     netif = netif_list;
     if (netif == NULL) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("No interface found");
+        #endif
         Serial.println("No interface found");
         return;
     }
 
     p = pbuf_alloc(PBUF_RAW, PACKET_LENGTH, PBUF_RAM);
     if (p == NULL) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Failed to allocate pbuf");
         Serial.println("Failed to allocate pbuf");
+        #endif
         return;
     }
 

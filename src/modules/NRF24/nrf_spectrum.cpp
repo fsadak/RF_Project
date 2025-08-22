@@ -41,6 +41,7 @@ String scanChannels(SPIClass *SSPI, bool web) {
 
         int level = (channel[i] > 125) ? 125 : channel[i]; // Clamp values
 
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         tft.drawFastVLine(i * _BW, 0, 125, (i % 8) ? TFT_BLACK : RGB565(25, 25, 25));
         tft.drawFastVLine(
             i * _BW, tftHeight - (10 + level), level, (i % 2 == 0) ? bruceConfig.priColor : TFT_DARKGREY
@@ -51,6 +52,7 @@ String scanChannels(SPIClass *SSPI, bool web) {
             if (i > 0) result += ",";
             result += String(level);
         }
+        #endif
     }
     if (web) result += "}";
     return result; // return a string in this format "{1,32,45,32,84,32 .... 12,54,65}" with 80 values to be
@@ -58,11 +60,13 @@ String scanChannels(SPIClass *SSPI, bool web) {
 }
 
 void nrf_spectrum(SPIClass *SSPI) {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     tft.fillScreen(bruceConfig.bgColor);
     tft.setTextSize(FP);
     tft.drawString("2.40Ghz", 0, tftHeight - LH);
     tft.drawCentreString("2.44Ghz", tftWidth / 2, tftHeight - LH, 1);
     tft.drawRightString("2.48Ghz", tftWidth, tftHeight - LH, 1);
+    #endif
     memset(channel, 0, CHANNELS);
 
     if (nrf_start()) {
@@ -88,7 +92,9 @@ void nrf_spectrum(SPIClass *SSPI) {
 
     } else {
         Serial.println("Fail Starting radio");
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("NRF24 not found");
+        #endif
         delay(500);
         return;
     }

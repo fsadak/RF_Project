@@ -1,6 +1,9 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "record.h"
+#ifdef HAS_RF
 #include "rf_utils.h"
 #include <ELECHOUSE_CC1101_SRC_DRV.h>
+#endif
 
 float phase = 0.0;
 float lastPhase = 2 * PI;
@@ -76,6 +79,8 @@ void rf_raw_record_draw(RawRecordingStatus status) {
 // TODO: replace frequency scans throughout rf.cpp with this unified function
 #define FREQUENCY_SCAN_MAX_TRIES 5
 float rf_freq_scan() {
+#ifdef HAS_RF
+    unsigned long previousMillis = 0;
     float frequency = 0;
     int idx = range_limits[bruceConfig.rfScanRange][0];
     uint8_t attempt = 0;
@@ -123,10 +128,14 @@ float rf_freq_scan() {
 #endif
     }
     return frequency;
+#else
+    return 0;
+#endif
 }
 
 // TODO: replace frequency selection throughout rf.cpp with this unified function
 void rf_range_selection(float currentFrequency = 0.0) {
+#ifdef HAS_RF
     int option = 0;
     options = {
         {String("Fixed [" + String(bruceConfig.rfFreq) + "]").c_str(),
@@ -156,9 +165,12 @@ void rf_range_selection(float currentFrequency = 0.0) {
 
     if (bruceConfig.rfFxdFreq) displayTextLine("Scan freq set to " + String(bruceConfig.rfFreq));
     else displayTextLine("Range set to " + String(subghz_frequency_ranges[bruceConfig.rfScanRange]));
+#endif
 }
 
 void rf_raw_record_create(RawRecording &recorded, bool &returnToMenu) {
+#ifdef HAS_RF
+    unsigned long previousMillis = 0;
     RawRecordingStatus status;
     RingbufHandle_t rb;
 
@@ -280,6 +292,7 @@ void rf_raw_record_create(RawRecording &recorded, bool &returnToMenu) {
     rmt_rx_stop(RMT_RX_CHANNEL);
     deinitRMT();
     deinitRfModule();
+#endif
 }
 
 int rf_raw_record_options(bool saved) {
@@ -332,3 +345,4 @@ void rf_raw_record() {
     recorded.frequency = 0;
     return;
 }
+#endif

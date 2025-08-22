@@ -1,3 +1,4 @@
+#if defined(HAS_PN532_KILLER)
 #include "PN532KillerTools.h"
 #include "PN532Killer.h"
 #include "apdu.h"
@@ -682,3 +683,4 @@ void PN532KillerTools::udpWifiSelectMenu() {
     selOptions.push_back({"Return", [&]() { return; }});
     loopOptions(selOptions);
 }
+#endif

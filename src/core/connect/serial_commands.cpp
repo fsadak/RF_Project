@@ -1,12 +1,16 @@
 #include "serial_commands.h"
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "core/display.h"
+#endif
 #include "core/mykeyboard.h"
 
 EspSerialCmd::EspSerialCmd() {}
 
 void EspSerialCmd::sendCommands() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Waiting...");
+    #endif
 
     if (!beginSend()) return;
 
@@ -17,7 +21,9 @@ void EspSerialCmd::sendCommands() {
 
     while (1) {
         if (check(EscPress)) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayInfo("Aborting...");
+            #endif
             sendStatus = ABORTED;
             break;
         }
@@ -57,8 +63,10 @@ void EspSerialCmd::sendCommands() {
 }
 
 void EspSerialCmd::receiveCommands() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Waiting...");
+    #endif
 
     recvCommand = "";
     recvQueue.clear();
@@ -71,17 +79,23 @@ void EspSerialCmd::receiveCommands() {
 
     while (1) {
         if (check(EscPress)) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayInfo("Aborting...");
+            #endif
             recvStatus = ABORTED;
             break;
         }
 
         if (recvStatus == FAILED) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayRecvError();
+            #endif
             recvStatus = WAITING;
         }
         if (recvStatus == SUCCESS) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayRecvCommand(serialCli.parse(recvCommand));
+            #endif
             recvStatus = WAITING;
         }
 
@@ -106,25 +120,32 @@ void EspSerialCmd::receiveCommands() {
 
 EspSerialCmd::Message EspSerialCmd::createCmdMessage() {
     // debounce
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     delay(500);
+    #endif
 
     String command = keyboard("", ESP_DATA_SIZE, "Serial Command");
     Message msg = createMessage(command);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     printMessage(msg);
+    #endif
 
     return msg;
 }
 
 void EspSerialCmd::displayBanner() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("RECEIVE COMMANDS");
     padprintln("");
+    #endif
 }
 
 void EspSerialCmd::displayRecvCommand(bool success) {
     String execution = success ? "Execution success" : "Execution failed";
     Serial.println(execution);
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Command received: ");
     padprintln(recvCommand);
@@ -132,35 +153,46 @@ void EspSerialCmd::displayRecvCommand(bool success) {
     padprintln(execution);
 
     displayRecvFooter();
+    #endif
 }
 
 void EspSerialCmd::displayRecvError() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Error receiving command");
     displayRecvFooter();
+    #endif
 }
 
 void EspSerialCmd::displayRecvFooter() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     padprintln("\n");
     padprintln("Press [ESC] to leave");
+    #endif
 }
 
 void EspSerialCmd::displaySentCommand(const char *command) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Command sent: ");
     padprintln(command);
     displaySentFooter();
+    #endif
 }
 
 void EspSerialCmd::displaySentError() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayBanner();
     padprintln("Error sending command");
     displaySentFooter();
+    #endif
 }
 
 void EspSerialCmd::displaySentFooter() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     padprintln("\n");
     padprintln("Press [OK] to send another command");
     padprintln("");
     padprintln("Press [ESC] to leave");
+    #endif
 }

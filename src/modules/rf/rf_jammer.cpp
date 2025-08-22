@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_jammer.h"
 #include "core/display.h"
 #include "rf_utils.h"
@@ -71,3 +72,4 @@ void RFJammer::run_itmt_jammer() {
         }
     }
 }
+#endif

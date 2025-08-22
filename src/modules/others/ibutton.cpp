@@ -1,3 +1,4 @@
+#if defined(HAS_IBUTTON) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "ibutton.h"
 #include "core/display.h"
 #include "core/mykeyboard.h"
@@ -195,3 +196,4 @@ void setiButtonPinMenu() {
     options.clear();
     bruceConfig.setiButtonPin(sel);
 }
+#endif

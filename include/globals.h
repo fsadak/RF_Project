@@ -5,7 +5,9 @@
 #include <precompiler_flags.h>
 // Globals.h
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #define ALCOLOR TFT_RED
+#endif
 
 #include "core/config.h"
 #include "core/configPins.h"
@@ -37,10 +39,12 @@ extern tft_logger tft;
 extern TFT_eSprite sprite;
 extern TFT_eSprite draw;
 #else
+#if defined (HAS_TFT)
 #include <tftLogger.h>
-extern tft_logger tft;
-extern SerialDisplayClass &sprite;
-extern SerialDisplayClass &draw;
+    extern tft_logger tft;
+    extern SerialDisplayClass &sprite;
+    extern SerialDisplayClass &draw;
+#endif
 #endif
 
 #ifdef USE_BQ27220_VIA_I2C
@@ -134,6 +138,7 @@ struct keyStroke { // DO NOT CHANGE IT!!!!!
     }
 };
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 struct TouchPoint {
     bool pressed = false;
     uint16_t x;
@@ -147,7 +152,9 @@ struct TouchPoint {
     }
 };
 
+
 extern TouchPoint touchPoint;
+#endif
 extern keyStroke KeyStroke;
 extern std::vector<Option> options;
 

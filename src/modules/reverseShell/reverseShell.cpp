@@ -14,6 +14,7 @@ void ReverseShell() {
     String lastCommand;
     bool shellConnected = false;
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     options.clear();
 
     // Display initialization messages
@@ -26,24 +27,31 @@ void ReverseShell() {
     tft.setCursor(15, 33);
     tft.println("Developed by Fourier (github.com/9dl)");
     tft.println("Starting reverse shell server...");
+#endif
 
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAPConfig(apGateway, apGateway, IPAddress(255, 255, 255, 0))) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
         tft.println("Failed to configure AP");
+#endif
         return;
     }
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     if (!WiFi.softAP("BruceShell", "", 1)) {
         tft.println("Failed to start AP");
         return;
     }
 
     tft.println("Wi-Fi AP Started: BruceShell");
+#endif
 
     delay(3000);
 
     tcpServer.begin();
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.println("TCP server started on port 23.");
+#endif
 
     webServer.on("/", [&webServer]() {
         String html = R"rawliteral(
@@ -98,7 +106,9 @@ void ReverseShell() {
 
     dnsServer.start(53, "*", apGateway);
     webServer.begin();
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
     tft.println("Web server started!");
+#endif
 
     while (true) {
         dnsServer.processNextRequest();
@@ -107,7 +117,9 @@ void ReverseShell() {
         if (!shellConnected) {
             tcpClient = tcpServer.available();
             if (tcpClient) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
                 tft.println("Client connected.");
+#endif
                 tcpClient.println("~Welcome to BruceShell.");
                 tcpClient.println("~Developed by Fourier (github.com/9dl)");
                 shellConnected = true;
@@ -115,11 +127,14 @@ void ReverseShell() {
         }
 
         if (shellConnected && !tcpClient.connected()) {
+#if (defined(HAS_TFT) || defined(HAS_SCREEN))
             tft.println("Client disconnected.");
+#endif
             shellConnected = false;
             tcpClient.stop();
         }
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         if (check(EscPress)) {
             tft.println("Exiting reverse shell server...");
             tcpServer.stop();
@@ -127,5 +142,6 @@ void ReverseShell() {
             dnsServer.stop();
             break;
         }
+#endif
     }
 }

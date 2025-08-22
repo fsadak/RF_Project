@@ -1,6 +1,8 @@
 #ifndef RF_STRUCTS_H
 #define RF_STRUCTS_H
 
+#include <Arduino.h>   // String, uint8_t, uint16_t, unsigned long vs.
+#include <vector>      // std::vector
 #include "core/display.h"
 #include <driver/rmt.h>
 

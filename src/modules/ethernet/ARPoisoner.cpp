@@ -60,12 +60,14 @@ void ARPoisoner::setup(IPAddress gateway) {
         victimIP[i] = gateway[i];
     }
     long tmp = 0;
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("ARP Poisoning");
     padprintln("");
     padprintln("Sending ARP msg to all hosts");
     padprintln("");
 
     padprintln("Press Any key to STOP.");
+    #endif
 
     loop();
 }
@@ -91,6 +93,7 @@ void ARPoisoner::loop() {
                 sendARPPacket(gatewayIP, gatewayMAC, victimIP, victimMAC, pcapFile);
 
                 delay(10);
+                #if (defined(HAS_TFT) || defined(HAS_SCREEN))
                 tft.drawRightString(
                     "   " + String(victimIP[0]) + "." + String(victimIP[1]) + "." + String(victimIP[2]) +
                         "." + String(i),
@@ -98,9 +101,12 @@ void ARPoisoner::loop() {
                     tftHeight - 16,
                     1
                 );
+                #endif
             }
             tmp = millis();
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             tft.drawRightString("     Waiting...", tftWidth - 12, tftHeight - 16, 1);
+            #endif
         }
     }
     pcapFile.close();

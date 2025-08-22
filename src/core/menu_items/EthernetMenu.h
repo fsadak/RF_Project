@@ -3,6 +3,7 @@
 #ifndef __Ethernet_MENU_H__
 #define __Ethernet_MENU_H__
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "modules/ethernet/EthernetHelper.h"
 #include <MenuItemInterface.h>
 #if !defined(LITE_VERSION)
@@ -20,5 +21,6 @@ public:
     bool getTheme() { return bruceConfig.theme.rfid; }
 };
 
+#endif
 #endif
 #endif

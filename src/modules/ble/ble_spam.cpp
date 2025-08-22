@@ -588,11 +588,13 @@ void ibeacon(char *DeviceName, char *BEACON_UUID, int ManufacturerId) {
     // Set the advertisement data
     pAdvertising->setAdvertisementData(advertisementData);
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorderWithTitle("iBeacon");
     padprintln("");
     padprintln("UUID:" + String(BEACON_UUID));
     padprintln("");
     padprintln("Press Any key to STOP.");
+    #endif
 
     while (!check(AnyKeyPress)) {
         // max_loops -= 1;
@@ -626,9 +628,10 @@ void aj_adv(int ble_choice) { // customSet defaults to false
     while (1) {
         if (millis() - timer > 100) {
 
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             switch (ble_choice) {
                 case 0: // Applejuice
-                    displayTextLine("Applejuice (" + String(count) + ")");
+                displayTextLine("Applejuice (" + String(count) + ")");
                     executeSpam(AppleJuice);
                     break;
                 case 1: // SourApple
@@ -662,6 +665,7 @@ void aj_adv(int ble_choice) { // customSet defaults to false
                     displayTextLine("Spamming " + spamName + "(" + String(count) + ")");
                     executeCustomSpam(spamName);
             }
+            #endif
             count++;
             timer = millis();
         }

@@ -1,4 +1,4 @@
-
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "ScriptsMenu.h"
 #include "core/display.h"
 #include "core/settings.h"
@@ -43,7 +43,7 @@ std::vector<Option> getScriptsOptionsList() {
         entry_title = entry_title.substring(0, entry_title.lastIndexOf(".")); // remove the extension
         opt.push_back({entry_title.c_str(), [=]() { run_bjs_script_headless(*fs, file2.path()); }});
     }
-    
+
     file2.close();
     root.close();
 
@@ -138,3 +138,4 @@ void ScriptsMenu::drawIcon(float scale) {
         bruceConfig.priColor
     );
 }
+#endif

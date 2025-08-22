@@ -1,3 +1,4 @@
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "ducky_typer.h"
 #include "core/display.h"
 #include "core/mykeyboard.h"
@@ -591,3 +592,4 @@ void MediaCommands(HIDInterface *hid, bool ble) {
     }
     returnToMenu = true;
 }
+#endif

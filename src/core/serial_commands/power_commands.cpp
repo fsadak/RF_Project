@@ -3,9 +3,13 @@
 #include <globals.h>
 
 uint32_t poweroffCallback(cmd *c) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     powerOff();
     esp_deep_sleep_start(); // only wake up via hardware reset
     return true;
+    #else
+    return false;
+    #endif
 }
 
 uint32_t rebootCallback(cmd *c) {
@@ -14,8 +18,12 @@ uint32_t rebootCallback(cmd *c) {
 }
 
 uint32_t sleepCallback(cmd *c) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     setSleepMode();
     return true;
+    #else
+    return false;
+    #endif
 }
 
 void createPoweroffCommand(SimpleCLI *cli) { Command cmd = cli->addCommand("poweroff", poweroffCallback); }

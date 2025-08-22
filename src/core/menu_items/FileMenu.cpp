@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "FileMenu.h"
 #include "core/display.h"
 #include "core/massStorage.h"
@@ -91,3 +92,4 @@ void FileMenu::drawIcon(float scale) {
         bruceConfig.priColor
     );
 }
+#endif

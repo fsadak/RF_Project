@@ -5,6 +5,7 @@ RF24 NRFradio(NRF24_CE_PIN, NRF24_SS_PIN);
 SPIClass *NRFSPI;
 
 void nrf_info() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     tft.setTextSize(FM);
     tft.setTextColor(TFT_RED, bruceConfig.bgColor);
@@ -23,6 +24,7 @@ void nrf_info() {
     );
     delay(1000);
     while (!check(AnyKeyPress));
+    #endif
 }
 
 bool nrf_start() {

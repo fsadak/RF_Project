@@ -1,3 +1,4 @@
+#include "WiFiServer.h"
 #include "core/main_menu.h"
 #include <globals.h>
 
@@ -16,7 +17,9 @@ BruceConfigPins bruceConfigPins;
 SerialCli serialCli;
 
 StartupApp startupApp;
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 MainMenu mainMenu;
+#endif
 SPIClass sdcardSPI;
 #ifdef USE_HSPI_PORT
 SPIClass CC_NRF_SPI(VSPI);
@@ -43,7 +46,9 @@ String menuOptionLabel = "";
 volatile int EncoderLedChange = 0;
 #endif
 
+#if defined(HAS_TOUCH)
 TouchPoint touchPoint;
+#endif
 
 keyStroke KeyStroke;
 
@@ -51,7 +56,9 @@ TaskHandle_t xHandle;
 void __attribute__((weak)) taskInputHandler(void *parameter) {
     auto timer = millis();
     while (true) {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
         checkPowerSaveTime();
+#endif
         // Sometimes this task run 2 or more times before looptask,
         // and navigation gets stuck, the idea here is run the input detection
         // if AnyKeyPress is false, or rerun if it was not renewed within 75ms (arbitrary)
@@ -67,8 +74,10 @@ void __attribute__((weak)) taskInputHandler(void *parameter) {
             SerialCmdPress = false;
             NextPagePress = false;
             PrevPagePress = false;
+#if defined(HAS_TOUCH)
             touchPoint.pressed = false;
             touchPoint.Clear();
+#endif
 #ifndef USE_TFT_eSPI_TOUCH
             InputHandler();
 #endif
@@ -123,15 +132,19 @@ volatile int tftHeight =
 volatile int tftHeight = TFT_WIDTH;
 #endif
 #else
+#if defined(HAS_TFT)
 tft_logger tft;
 SerialDisplayClass &sprite = tft;
 SerialDisplayClass &draw = tft;
 volatile int tftWidth = VECTOR_DISPLAY_DEFAULT_HEIGHT;
 volatile int tftHeight = VECTOR_DISPLAY_DEFAULT_WIDTH;
 #endif
+#endif
 
 #include "core/display.h"
+#ifdef HAS_RGB
 #include "core/led_control.h"
+#endif
 #include "core/mykeyboard.h"
 #include "core/sd_functions.h"
 #include "core/serialcmds.h"
@@ -139,7 +152,9 @@ volatile int tftHeight = VECTOR_DISPLAY_DEFAULT_WIDTH;
 #include "core/wifi/wifi_common.h"
 #include "modules/bjs_interpreter/interpreter.h" // for JavaScript interpreter
 #include "modules/others/audio.h"                // for playAudioFile
-#include "modules/rf/rf_utils.h"                 // for initCC1101once
+#ifdef HAS_RF
+#include "modules/rf/rf_utils.h" // for initCC1101once
+#endif
 #include <Wire.h>
 
 /*********************************************************************
@@ -184,12 +199,14 @@ void setup_gpio() {
         initCC1101once(&tft.getSPIinstance()); // (T_EMBED), CORE2 and others
     else
 #endif
+#ifdef HAS_RF
         if (bruceConfigPins.CC1101_bus.mosi == bruceConfigPins.SDCARD_bus.mosi)
         initCC1101once(&sdcardSPI); // (ARDUINO_M5STACK_CARDPUTER) and (ESP32S3DEVKITC1) and devices that
                                     // share CC1101 pin with only SDCard
     else initCC1101once(NULL);
-    // (ARDUINO_M5STICK_C_PLUS) || (ARDUINO_M5STICK_C_PLUS2) and others that doesn´t share SPI with
-    // other devices (need to change it when Bruce board comes to shore)
+// (ARDUINO_M5STICK_C_PLUS) || (ARDUINO_M5STICK_C_PLUS2) and others that doesn´t share SPI with
+// other devices (need to change it when Bruce board comes to shore)
+#endif
 }
 
 /*********************************************************************
@@ -197,6 +214,7 @@ void setup_gpio() {
  **  Config tft
  *********************************************************************/
 void begin_tft() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setRotation(bruceConfig.rotation); // sometimes it misses the first command
     tft.invertDisplay(bruceConfig.colorInverted);
     tft.setRotation(bruceConfig.rotation);
@@ -208,6 +226,7 @@ void begin_tft() {
 #endif
     resetTftDisplay();
     setBrightness(bruceConfig.bright, false);
+#endif
 }
 
 /*********************************************************************
@@ -215,6 +234,7 @@ void begin_tft() {
  **  Draw boot screen
  *********************************************************************/
 void boot_screen() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     tft.setTextSize(FM);
     tft.drawPixel(0, 0, bruceConfig.bgColor);
@@ -225,6 +245,7 @@ void boot_screen() {
     tft.drawCentreString(
         "PREDATORY FIRMWARE", tftWidth / 2, tftHeight + 2, 1
     ); // will draw outside the screen on non touch devices
+#endif
 }
 
 /*********************************************************************
@@ -232,6 +253,7 @@ void boot_screen() {
  **  Draw boot screen
  *********************************************************************/
 void boot_screen_anim() {
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     boot_screen();
     int i = millis();
     // checks for boot.jpg in SD and LittleFS for customization
@@ -316,6 +338,7 @@ void boot_screen_anim() {
 
     // Clear splashscreen
     tft.fillScreen(bruceConfig.bgColor);
+#endif
 }
 
 /*********************************************************************
@@ -324,7 +347,6 @@ void boot_screen_anim() {
  *********************************************************************/
 void init_clock() {
 #if defined(HAS_RTC)
-
     _rtc.begin();
     _rtc.GetBm8563Time();
     _rtc.GetTime(&_time);
@@ -336,7 +358,7 @@ void init_clock() {
  **  Led initialisation
  *********************************************************************/
 void init_led() {
-#ifdef HAS_RGB_LED
+#ifdef HAS_RGB
     beginLed();
 #endif
 }
@@ -376,6 +398,8 @@ void setup() {
         SAFE_STACK_BUFFER_SIZE / 4
     ); // Must be invoked before Serial.begin(). Default is 256 chars
     Serial.begin(115200);
+    log_d("Starting Bruce");
+    WiFiServer dummyServer(80);
 
     log_d("Total heap: %d", ESP.getHeapSize());
     log_d("Free heap: %d", ESP.getFreeHeap());
@@ -393,6 +417,7 @@ void setup() {
     bruceConfig.bright = 100; // theres is no value yet
     bruceConfig.rotation = ROTATION;
     setup_gpio();
+    log_d("gpio setup done");
 #if defined(HAS_SCREEN)
     tft.init();
     tft.setRotation(bruceConfig.rotation);
@@ -401,16 +426,23 @@ void setup() {
     tft.setTextColor(TFT_PURPLE, TFT_BLACK);
     tft.drawCentreString("Booting", tft.width() / 2, tft.height() / 2, 1);
 #else
+#if defined(HAS_TFT)
     tft.begin();
+    log_d("tft setup done");
+#endif
 #endif
     begin_storage();
+    log_d("storage setup done");
     begin_tft();
+    log_d("tft setup done");
     init_clock();
+    log_d("clock setup done");
     init_led();
+    log_d("led setup done");
 
     // Some GPIO Settings (such as CYD's brightness control must be set after tft and sdcard)
     _post_setup_gpio();
-    // end of post gpio begin
+    log_d("post gpio setup done");
 
     // #ifndef USE_TFT_eSPI_TOUCH
     // This task keeps running all the time, will never stop
@@ -422,12 +454,16 @@ void setup() {
         2,                // Task priority (0 to 3), loopTask has priority 2.
         &xHandle          // Task handle (not used)
     );
-    // #endif
+    log_d("input handler setup done");
+// #endif
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     bruceConfig.openThemeFile(bruceConfig.themeFS(), bruceConfig.themePath);
+#endif
     if (!bruceConfig.instantBoot) {
         boot_screen_anim();
         startup_sound();
     }
+    log_d("boot screen done");
 
     if (bruceConfig.wifiAtStartup) {
         xTaskCreate(
@@ -439,14 +475,20 @@ void setup() {
             NULL               // Task handle (not used)
         );
     }
+    log_d("wifi setup done");
 
     //  start a task to handle serial commands while the webui is running
     startSerialCommandsHandlerTask();
+    log_d("serial commands setup done");
 
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
     wakeUpScreen();
+#endif
+    log_d("wake up screen done");
 
     if (bruceConfig.startupApp != "" && !startupApp.startApp(bruceConfig.startupApp)) {
         bruceConfig.setStartupApp("");
+        log_d("bruceConfig.setStartupApp");
     }
 }
 
@@ -485,33 +527,37 @@ void loop() {
 // alternative loop function for headless boards
 #include "core/wifi/webInterface.h"
 
+enum WiFiState { TRY_STA, AP_MODE };
+WiFiState wifiState = TRY_STA;
+unsigned long staStartTime = 0;
+const unsigned long STA_TIMEOUT = 15000; // 15 saniye
+
 void loop() {
-    wifiConnecttoKnownNet(); // will write wifiConnected=true if connected
-    if (!wifiConnected) { wifiDisconnect(); }
+    switch (wifiState) {
+        case TRY_STA:
+            if (staStartTime == 0) {
+                WiFi.mode(WIFI_STA);
+                WiFi.begin("", "");
+                staStartTime = millis();
+            }
+            if (WiFi.status() == WL_CONNECTED) {
+                Serial.println("Connected to WiFi, WebUI on STA");
+                startWebUi(false);
+                wifiState = AP_MODE; // STA bağlantısı ile WebUI başladı
+            } else if (millis() - staStartTime > STA_TIMEOUT) {
+                Serial.println("STA timeout, starting AP");
+                WiFi.mode(WIFI_AP);
+                WiFi.softAP("ESP32-AP", "password");
+                startWebUi(true);
+                wifiState = AP_MODE;
+            }
+            break;
 
-    // Try to connect to a known network
+        case AP_MODE:
+            // AP modunda WebUI zaten çalışıyor, loop burada fazla işlem yapmaz
+            break;
+    }
 
-    // if do not find a known network, starts in AP mode
-    Serial.println("Starting WebUI");
-    startWebUi(!wifiConnected); // true-> AP Mode, false-> my Network mode
-
-    Serial.println(
-        "\n"
-        "██████  ██████  ██    ██  ██████ ███████ \n"
-        "██   ██ ██   ██ ██    ██ ██      ██      \n"
-        "██████  ██████  ██    ██ ██      █████   \n"
-        "██   ██ ██   ██ ██    ██ ██      ██      \n"
-        "██████  ██   ██  ██████   ██████ ███████ \n"
-        "                                         \n"
-        "         PREDATORY FIRMWARE\n\n"
-        "Tips: Connect to the WebUI for better experience\n"
-        "      Add your network by sending: wifi add ssid password\n\n"
-        "At your command:"
-    );
-
-    // Enable navigation through webUI
-    tft.fillScreen(bruceConfig.bgColor);
-    mainMenu.begin();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
 }
 #endif

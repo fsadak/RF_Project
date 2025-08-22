@@ -98,7 +98,9 @@ uint32_t typeFileCallback(cmd *c) {
 
     Serial.println(plaintext);
 
+#if defined(HAS_DUCT) && (defined(HAS_TFT) || defined(HAS_SCREEN))
     key_input_from_string(plaintext);
+#endif
     return true;
 }
 

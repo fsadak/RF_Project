@@ -1,3 +1,4 @@
+#ifdef HAS_RF
 #include "rf_send.h"
 #include "core/type_convertion.h"
 #include "rf_utils.h"
@@ -75,7 +76,8 @@ bool txSubFile(FS *fs, String filepath) {
         if (line.startsWith("Bit_RAW:"))
             bitRawList.push_back(txt.toInt()); // selected_code.BitRAW = txt.toInt();
         if (line.startsWith("Key:"))
-            keyList.push_back(hexStringToDecimal(txt.c_str())
+            keyList.push_back(
+                hexStringToDecimal(txt.c_str())
             ); // selected_code.key = hexStringToDecimal(txt.c_str());
         if (line.startsWith("RAW_Data:") || line.startsWith("Data_RAW:"))
             rawDataList.push_back(txt); // selected_code.data = txt;
@@ -416,3 +418,4 @@ void RCSwitch_RAW_send(int *ptrtransmittimings) {
         digitalWrite(nTransmitterPin, LOW);
     } // end for
 }
+#endif

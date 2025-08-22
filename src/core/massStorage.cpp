@@ -1,7 +1,9 @@
 #if defined(ARDUINO_USB_MODE) && !defined(USE_SD_MMC)
 
 #include "massStorage.h"
-#include "core/display.h"
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
+    #include "core/display.h"
+#endif
 #include <USB.h>
 
 bool MassStorage::shouldStop = false;
@@ -17,13 +19,22 @@ MassStorage::~MassStorage() {
 }
 
 void MassStorage::setup() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayMessage("Mounting...");
+    #else
+    Serial.println("Mounting...");
+    #endif
 
     setShouldStop(false);
 
     if (!setupSdCard()) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("SD card not found.");
         delay(1000);
+        #else
+        Serial.println("SD card not found.");
+        delay(1000);
+        #endif
         return;
     }
 
@@ -40,7 +51,9 @@ void MassStorage::loop() {
 void MassStorage::beginUsb() {
     setupUsbCallback();
     setupUsbEvent();
-    drawUSBStickIcon(false);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+        drawUSBStickIcon(false);
+    #endif
     USB.begin();
 }
 
@@ -76,9 +89,13 @@ void MassStorage::setupUsbEvent() {
 }
 
 void MassStorage::displayMessage(String message) {
-    drawMainBorderWithTitle("Mass Storage");
-    padprintln("");
-    padprintln(message);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
+        drawMainBorderWithTitle("Mass Storage");
+        padprintln("");
+        padprintln(message);
+    #else
+        Serial.println(message);
+    #endif
 }
 
 int32_t usbWriteCallback(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
@@ -127,6 +144,7 @@ bool usbStartStopCallback(uint8_t power_condition, bool start, bool load_eject) 
 }
 
 void drawUSBStickIcon(bool plugged) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     MassStorage::displayMessage("");
 
     float scale;
@@ -171,6 +189,7 @@ void drawUSBStickIcon(bool plugged) {
     tft.fillRoundRect(portDetailX, portDetailY2, portDetailW, portDetailH, radius, TFT_DARKGREY);
     // Led
     tft.fillRoundRect(ledX, ledY, ledW, ledH, radius, plugged ? TFT_GREEN : TFT_RED);
+    #endif
 }
 
 #endif // ARDUINO_USB_MODE

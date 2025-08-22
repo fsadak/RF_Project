@@ -1,3 +1,4 @@
+#if defined(HAS_AMIIBO)
 /**
  * @file amiibolink.cpp
  * @author Rennan Cockles (https://github.com/rennancockles)
@@ -198,3 +199,4 @@ bool Amiibo::checkEmulationTagType() {
 
     return true;
 }
+#endif

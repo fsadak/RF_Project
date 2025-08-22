@@ -1,3 +1,4 @@
+#if defined(HAS_MIC) && (defined(HAS_TFT) || defined(HAS_SCREEN))
 #include "mic.h"
 #include "core/mykeyboard.h"
 #include "core/powerSave.h"
@@ -408,3 +409,4 @@ void mic_record() {
     displaySuccess("Recording Finished", true);
     ioExpander.turnPinOnOff(IO_EXP_MIC, LOW);
 }
+#endif

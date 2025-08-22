@@ -55,6 +55,7 @@ void selectRecentIrMenu() {
     }
     options.push_back({"Main Menu", [&]() { exit = true; }});
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     int idx = 0;
     while (1) {
         idx = loopOptions(options, idx);
@@ -65,6 +66,7 @@ void selectRecentIrMenu() {
         if (check(EscPress) || exit) break;
     }
     options.clear();
+    #endif
 
     return;
 }
@@ -82,7 +84,9 @@ bool txIrFile(FS *fs, String filepath) {
 
     if (!databaseFile) {
         Serial.println("Failed to open database file.");
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         displayError("Fail to open file");
+        #endif
         delay(2000);
         return false;
     }
@@ -110,7 +114,9 @@ bool txIrFile(FS *fs, String filepath) {
     // comes back to first position, beggining of the file
     databaseFile.seek(0);
     while (databaseFile.available()) {
+        #if (defined(HAS_TFT) || defined(HAS_SCREEN))
         progressHandler(codes_sent, total_codes);
+        #endif
         line = databaseFile.readStringUntil('\n');
         if (line.endsWith("\r")) line.remove(line.length() - 1);
 
@@ -193,7 +199,9 @@ bool txIrFile(FS *fs, String filepath) {
         if (check(SelPress)) // Pause TV-B-Gone
         {
             while (check(SelPress)) yield();
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             displayTextLine("Paused");
+            #endif
 
             while (!check(SelPress)) { // If Presses Select again, continues
                 if (check(EscPress)) {
@@ -203,7 +211,9 @@ bool txIrFile(FS *fs, String filepath) {
             }
             while (check(SelPress)) { yield(); }
             if (endingEarly) break; // Cancels  custom IR Spam
+            #if (defined(HAS_TFT) || defined(HAS_SCREEN))
             displayTextLine("Running, Wait");
+            #endif
         }
     } // end while file has lines to process
     databaseFile.close();
@@ -225,6 +235,7 @@ void otherIRcodes() {
 
     returnToMenu = true; // make sure menu is redrawn when quitting in any point
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     options = {
         {"Recent",   selectRecentIrMenu       },
         {"LittleFS", [&]() { fs = &LittleFS; }},
@@ -233,6 +244,7 @@ void otherIRcodes() {
     if (setupSdCard()) options.insert(options.begin(), {"SD Card", [&]() { fs = &SD; }});
 
     loopOptions(options);
+    #endif
 
     if (fs == NULL) { // recent or menu was selected
         return;
@@ -247,6 +259,7 @@ void otherIRcodes() {
     // select mode
     bool exit = false;
     bool mode_cmd = true;
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     options = {
         {"Choose cmd", [&]() { mode_cmd = true; } },
         {"Spam all",   [&]() { mode_cmd = false; }},
@@ -254,6 +267,7 @@ void otherIRcodes() {
     };
 
     loopOptions(options);
+    #endif
 
     if (exit == true) return;
 
@@ -266,7 +280,9 @@ void otherIRcodes() {
     // else continue and try to parse the file
 
     databaseFile = fs->open(filepath, FILE_READ);
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorder();
+    #endif
 
     if (!databaseFile) {
         Serial.println("Failed to open database file.");
@@ -330,6 +346,7 @@ void otherIRcodes() {
     PPM.disableOTG();
 #endif
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     digitalWrite(bruceConfig.irTx, LED_OFF);
     int idx = 0;
     while (1) {
@@ -337,6 +354,7 @@ void otherIRcodes() {
         if (check(EscPress) || exit) break;
     }
     options.clear();
+    #endif
 } // end of otherIRcodes
 
 // IR commands
@@ -363,7 +381,9 @@ void sendIRCommand(IRCode *code) {
 void sendNECCommand(String address, String command) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
     uint16_t addressValue = strtoul(address.substring(0, 2).c_str(), nullptr, 16);
     uint16_t commandValue = strtoul(command.substring(0, 2).c_str(), nullptr, 16);
     uint64_t data = irsend.encodeNEC(addressValue, commandValue);
@@ -384,7 +404,9 @@ void sendNECCommand(String address, String command) {
 void sendNECextCommand(String address, String command) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
 
     int first_zero_byte_pos = address.indexOf("00", 2);
     if (first_zero_byte_pos != -1) address = address.substring(0, first_zero_byte_pos);
@@ -422,7 +444,9 @@ void sendNECextCommand(String address, String command) {
 void sendRC5Command(String address, String command) {
     IRsend irsend(bruceConfig.irTx, true); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
     uint8_t addressValue = strtoul(address.substring(0, 2).c_str(), nullptr, 16);
     uint8_t commandValue = strtoul(command.substring(0, 2).c_str(), nullptr, 16);
     uint16_t data = irsend.encodeRC5(addressValue, commandValue);
@@ -441,7 +465,9 @@ void sendRC5Command(String address, String command) {
 void sendRC6Command(String address, String command) {
     IRsend irsend(bruceConfig.irTx, true); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
     address.replace(" ", "");
     command.replace(" ", "");
     uint32_t addressValue = strtoul(address.substring(0, 2).c_str(), nullptr, 16);
@@ -464,7 +490,9 @@ void sendRC6Command(String address, String command) {
 void sendSamsungCommand(String address, String command) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
     uint8_t addressValue = strtoul(address.substring(0, 2).c_str(), nullptr, 16);
     uint8_t commandValue = strtoul(command.substring(0, 2).c_str(), nullptr, 16);
     uint64_t data = irsend.encodeSAMSUNG(addressValue, commandValue);
@@ -485,7 +513,9 @@ void sendSamsungCommand(String address, String command) {
 void sendSonyCommand(String address, String command, uint8_t nbits) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
 
     address.replace(" ", "");
     command.replace(" ", "");
@@ -532,7 +562,9 @@ void sendSonyCommand(String address, String command, uint8_t nbits) {
 void sendKaseikyoCommand(String address, String command) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
 
     address.replace(" ", "");
     command.replace(" ", "");
@@ -591,7 +623,9 @@ bool sendDecodedCommand(String protocol, String value, uint8_t bits) {
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
     bool success = false;
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
 
     if (hasACState(type)) {
         // need to send the state (still passed from value)
@@ -645,7 +679,9 @@ void sendRawCommand(uint16_t frequency, String rawData) {
 
     IRsend irsend(bruceConfig.irTx); // Set the GPIO to be used to sending the message.
     irsend.begin();
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Sending..");
+    #endif
 
     uint16_t dataBufferSize = 1;
     for (int i = 0; i < rawData.length(); i++) {

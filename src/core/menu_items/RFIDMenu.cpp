@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "RFIDMenu.h"
 #include "core/display.h"
 #include "core/settings.h"
@@ -105,3 +106,4 @@ void RFIDMenu::drawIcon(float scale) {
         bruceConfig.bgColor
     );
 }
+#endif

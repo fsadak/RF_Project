@@ -41,6 +41,7 @@ char strID[18];
 char strAddl[200];
 
 void ble_info(String name, String address, String signal) {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     drawMainBorder();
     tft.setTextColor(bruceConfig.priColor);
     tft.drawCentreString("-=Information=-", tftWidth / 2, 28, SMOOTH_FONT);
@@ -48,6 +49,7 @@ void ble_info(String name, String address, String signal) {
     tft.drawString("Adresse: " + address, 10, 66);
     tft.drawString("Signal: " + String(signal) + " dBm", 10, 84);
     tft.drawCentreString("   Press " + String(BTN_ALIAS) + " to act", tftWidth / 2, tftHeight - 20, 1);
+    #endif
 
     delay(300);
     while (!check(SelPress)) {
@@ -107,16 +109,20 @@ void ble_scan_setup() {
 }
 
 void ble_scan() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     displayTextLine("Scanning..");
+    #endif
 
     options = {};
     ble_scan_setup();
     BLEScanResults foundDevices = pBLEScan->start(scanTime, false);
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     addOptionToMainMenu();
 
     loopOptions(options);
     options.clear();
+    #endif
 
     // Delete results fromBLEScan buffer to release memory
     pBLEScan->clearResults();
@@ -144,6 +150,7 @@ bool initBLEServer() {
 }
 
 void disPlayBLESend() {
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     uint8_t senddata[2] = {0};
     tft.fillScreen(bruceConfig.bgColor);
     drawMainBorder(); // Moved up to avoid drawing screen issues
@@ -216,6 +223,7 @@ void disPlayBLESend() {
     pServer->getAdvertising()->stop();
     BLEDevice::deinit();
     BLEConnected = false;
+    #endif
 }
 
 static bool is_ble_inited = false;
@@ -231,7 +239,9 @@ void ble_test() {
     is_ble_inited = true;
     // }
 
+    #if (defined(HAS_TFT) || defined(HAS_SCREEN))
     disPlayBLESend();
+    #endif
 
     printf("Quit ble test\n");
 }

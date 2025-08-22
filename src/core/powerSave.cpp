@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "powerSave.h"
 #include "display.h"
 #include "settings.h"
@@ -62,3 +63,4 @@ void sleepModeOff() {
     feedLoopWDT();
     delay(200);
 }
+#endif

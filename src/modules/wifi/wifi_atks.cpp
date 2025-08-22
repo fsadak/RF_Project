@@ -77,6 +77,7 @@ void wsl_bypasser_send_raw_frame(const wifi_ap_record_t *ap_record, uint8_t chan
 ***************************************************************************************/
 void wifi_atk_info(String tssid, String mac, uint8_t channel) {
     // desenhar a tela
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorder();
     tft.setTextColor(bruceConfig.priColor);
     tft.drawCentreString("-=Information=-", tft.width() / 2, 28, SMOOTH_FONT);
@@ -84,6 +85,13 @@ void wifi_atk_info(String tssid, String mac, uint8_t channel) {
     tft.drawString("Channel: " + String(channel), 10, 66);
     tft.drawString(mac, 10, 84);
     tft.drawString("Press " + String(BTN_ALIAS) + " to act", 10, tftHeight - 20);
+    #else
+    Serial.println("-=Information=-");
+    Serial.println("AP: " + tssid);
+    Serial.println("Channel: " + String(channel));
+    Serial.println(mac);
+    Serial.println("Press " + String(BTN_ALIAS) + " to act");
+    #endif
     vTaskDelay(200 / portTICK_RATE_MS);
     SelPress = false;
 
@@ -105,6 +113,7 @@ void wifi_atk_info(String tssid, String mac, uint8_t channel) {
 ** @brief: Open menu to choose which AP Attack
 ***************************************************************************************/
 void wifi_atk_menu() {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     bool scanAtks = false;
     options = {
         {"Target Atks",  [&]() { scanAtks = true; }    },
@@ -157,19 +166,29 @@ void wifi_atk_menu() {
         loopOptions(options);
         options.clear();
     }
+    #endif
 }
+
 void deauthFloodAttack() {
     Serial.begin(115200);
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAP("DeauthFlood", emptyString, 1, 1, 4, false)) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         displayError("Failed to start AP", true);
+        #else
+        Serial.println("Failed to start AP");
+        #endif
         return;
     }
     wifiConnected = true;
     int nets;
     WiFi.mode(WIFI_AP);
 ScanNets:
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     displayTextLine("Scanning..");
+    #else
+    Serial.println("Scanning..");
+    #endif
     nets = WiFi.scanNetworks();
     ap_records.clear();
     for (int i = 0; i < nets; i++) {
@@ -185,13 +204,23 @@ ScanNets:
     uint32_t rescan_counter = millis();
     uint16_t count = 0;
     uint8_t channel = 0;
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     drawMainBorderWithTitle("Deauth Flood");
+    #else
+    Serial.println("Deauth Flood");
+    #endif
+
     while (true) {
         for (const auto &record : ap_records) {
             channel = record.primary;
             wsl_bypasser_send_raw_frame(&record, record.primary); // Sets channel to the same AP
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.setCursor(10, tftHeight - 45);
             tft.println("Channel " + String(record.primary) + "    ");
+            #else
+            Serial.println("Channel " + String(record.primary));
+            #endif
+
             for (int i = 0; i < 100; i++) {
                 send_raw_frame(deauth_frame, sizeof(deauth_frame_default));
                 count += 3;
@@ -201,6 +230,7 @@ ScanNets:
         }
         // Update counter every 2 seconds
         if (millis() - lastTime > 2000) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             drawMainBorderWithTitle("Deauth Flood");
             tft.setCursor(10, tftHeight - 25);
             tft.print("Frames:               ");
@@ -208,6 +238,10 @@ ScanNets:
             tft.println("Frames: " + String(count / 2) + "/s   ");
             tft.setCursor(10, tftHeight - 45);
             tft.println("Channel " + String(channel) + "    ");
+            #else
+            Serial.println("Frames: " + String(count / 2) + "/s   ");
+            Serial.println("Channel " + String(channel) + "    ");
+            #endif
             count = 0;
             lastTime = millis();
         }
@@ -225,6 +259,7 @@ ScanNets:
 ** @brief: Open menu to choose which AP Attack
 ***************************************************************************************/
 void target_atk_menu(String tssid, String mac, uint8_t channel) {
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
 AGAIN:
     options = {
         {"Information",         [=]() { wifi_atk_info(tssid, mac, channel); }      },
@@ -239,6 +274,7 @@ AGAIN:
 
     loopOptions(options);
     if (!returnToMenu) goto AGAIN; // get back from Information without overflow the stack
+    #endif
 }
 
 /***************************************************************************************
@@ -263,18 +299,29 @@ void target_atk(String tssid, String mac, uint8_t channel) {
     bool redraw = true;
     check(SelPress);
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     tft.setTextSize(FM);
+    #endif
     setCpuFrequencyMhz(240);
     while (1) {
         if (redraw) {
             // desenhar a tela
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             drawMainBorderWithTitle("Target Deauth");
             tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
             padprintln("");
             padprintln("AP: " + tssid);
             padprintln("Channel: " + String(channel));
             padprintln(mac);
+            #else
+            Serial.println("-=Target Deauth=-");
+            Serial.println("AP: " + tssid);
+            Serial.println("Channel: " + String(channel));
+            Serial.println(mac);
+            #endif
+            redraw = false;
+
             vTaskDelay(50 / portTICK_RATE_MS);
             redraw = false;
         }
@@ -283,14 +330,23 @@ void target_atk(String tssid, String mac, uint8_t channel) {
         count += 3; // the function above sends 3 frames each time
         // atualize counter
         if (millis() - tmp > 2000) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             tft.setCursor(15, tftHeight - 23);
             tft.print("Frames: " + String(count / 2) + "/s");
+            #else
+            Serial.println("Frames: " + String(count / 2) + "/s");
+            #endif
             count = 0;
             tmp = millis();
         }
         // Pause attack
         if (check(SelPress)) {
+            #if defined(HAS_TFT) || defined(HAS_SCREEN)
             displayTextLine("Deauth Paused");
+            #else
+            Serial.println("Deauth Paused");
+            #endif
+            redraw = true;
             // wait to restart or kick out of the function
             while (!check(SelPress)) {
                 if (check(EscPress)) break;
@@ -620,6 +676,7 @@ void beaconAttack() {
     for (int i = 0; i < 32; i++) emptySSID[i] = ' ';
     // for random generator
     randomSeed(1);
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     options = {
         {"Funny SSID",
          [&]() {
@@ -643,14 +700,20 @@ void beaconAttack() {
     };
     addOptionToMainMenu();
     loopOptions(options);
+    #endif
 
     wifiConnected = true; // display wifi icon
     String beaconFile = "";
     File file;
     FS *fs;
     if (BeaconMode != 3) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         drawMainBorderWithTitle("WiFi: Beacon SPAM");
         displayTextLine(txt);
+        #else
+        Serial.println("WiFi: Beacon SPAM");
+        Serial.println(txt);
+        #endif
     }
 
     while (1) {
@@ -669,18 +732,22 @@ void beaconAttack() {
                 if (setupSdCard()) {
                     options.push_back({"SD Card", [&]() { fs = &SD; }});
                 }
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 options.push_back({"LittleFS", [&]() { fs = &LittleFS; }});
                 addOptionToMainMenu();
 
                 loopOptions(options);
+                #endif
                 if (fs != nullptr) beaconFile = loopSD(*fs, true, "TXT");
                 else goto END;
                 file = fs->open(beaconFile, FILE_READ);
                 beaconFile = file.readString();
                 beaconFile.replace("\r\n", "\n");
+                #if defined(HAS_TFT) || defined(HAS_SCREEN)
                 tft.drawPixel(0, 0, 0);
                 drawMainBorderWithTitle("WiFi: Beacon SPAM");
                 displayTextLine(txt);
+                #endif
             }
 
             const char *randoms = beaconFile.c_str();

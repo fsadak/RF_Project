@@ -49,7 +49,9 @@ private:
     void hf14aMfuReadDumpMode();
     void hf14aMfuWriteDumpMode();
     void hf14aMfWriteDumpMode();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     void hf14aMfWriteDump(ScrollableTextArea &area);
+    #endif
     void hf15ReadDumpMode();
     void hf15WriteDumpMode();
     void selectMode();

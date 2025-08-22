@@ -62,9 +62,13 @@ void net_ap(int i) {
     file.close();
 
 PrintOnly:
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextSize(1);
     tft.setTextColor(bruceConfig.secColor);
     tft.println(String(WiFi.SSID(i) + ":" + bssid_ready).c_str());
+    #else
+    Serial.println(String(WiFi.SSID(i) + ":" + bssid_ready).c_str());
+    #endif
 }
 
 void claro_ap(int i) {
@@ -99,25 +103,39 @@ void claro_ap(int i) {
     file.close();
 
 PrintOnly:
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextSize(1);
     tft.setTextColor(bruceConfig.secColor);
     tft.println(String(WiFi.SSID(i) + ":" + bssid_ready).c_str());
+    #else
+    Serial.println(String(WiFi.SSID(i) + ":" + bssid_ready).c_str());
+    #endif
 }
 
 void dpwo_setup() {
     // tft.clear();
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
     tft.setCursor(0, 0);
+    #endif
     Serial.println("Scanning for DPWO...");
     WiFi.mode(WIFI_STA);
     ap_scanned = WiFi.scanNetworks();
     Serial.println(ap_scanned);
 
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.setTextColor(bruceConfig.secColor);
     tft.println("Scanning for DPWO...");
+    #else
+    Serial.println("Scanning for DPWO...");
+    #endif
 
     if (ap_scanned == 0) {
+        #if defined(HAS_TFT) || defined(HAS_SCREEN)
         tft.println("no networks found");
+        #else
+        Serial.println("no networks found");
+        #endif
     } else {
 
         // TODO: add different functions to match Copel and Vivo regex on SSID also
@@ -142,5 +160,7 @@ void dpwo_setup() {
     ap_scanned = WiFi.scanNetworks();
 
     // TODO: append vulnerable APs and dont repeat the output inside a loop
+    #if defined(HAS_TFT) || defined(HAS_SCREEN)
     tft.fillScreen(bruceConfig.bgColor);
+    #endif
 }

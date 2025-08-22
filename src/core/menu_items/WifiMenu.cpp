@@ -1,3 +1,4 @@
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 #include "WifiMenu.h"
 #include "core/display.h"
 #include "core/settings.h"
@@ -83,7 +84,7 @@ void WifiMenu::optionsMenu() {
             snifferOptions.push_back({"Raw Sniffer",    sniffer_setup});
             snifferOptions.push_back({"Probe Sniffer",  karma_setup});
             snifferOptions.push_back({"Back",      [=]()  {optionsMenu(); }});
-        
+
         loopOptions(snifferOptions, MENU_TYPE_SUBMENU, "Sniffers");
     }});
     options.push_back({"Scan Hosts", [=]() {
@@ -150,3 +151,4 @@ void WifiMenu::drawIcon(float scale) {
         bruceConfig.bgColor
     );
 }
+#endif

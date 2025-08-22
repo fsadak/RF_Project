@@ -1,5 +1,6 @@
 #ifndef __FM_MENU_H__
 #define __FM_MENU_H__
+#if defined(HAS_TFT) || defined(HAS_SCREEN)
 
 #include <MenuItemInterface.h>
 
@@ -13,4 +14,5 @@ public:
     bool getTheme() { return bruceConfig.theme.fm; }
 };
 
+#endif
 #endif
